@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirm Order</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#080808;color:#fff;font-family:'Rajdhani',sans-serif;min-height:100vh;padding:0 0 40px}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #161616;background:#0a0a0a}
+  .back-btn{color:#555;font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:color 0.2s}
+  .back-btn:hover{color:#fff}
+  .topbar-title{font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:3px;color:#fff}
+  .topbar-right{width:36px}
+
+  .rainbow-bar{height:3px;background:linear-gradient(90deg,#00d2ff,#9c27b0,#ff1e50,#ffd700,#00ff88);animation:shift 3s linear infinite;background-size:200% 100%}
+  @keyframes shift{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+  .body{padding:20px 16px}
+
+  /* PRODUCT HERO */
+  .product-hero{background:#111;border-radius:20px;overflow:hidden;margin-bottom:18px;border:1px solid #1e1e1e;position:relative}
+  .hero-img{width:100%;height:160px;object-fit:cover;display:block}
+  .hero-emoji{width:100%;height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a0a14,#2d0a20);font-size:80px}
+  .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#111 100%);pointer-events:none}
+  .hero-info{padding:14px 16px 16px}
+  .hero-name{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:3px;margin-bottom:8px}
+  .hero-tags{display:flex;gap:8px;flex-wrap:wrap}
+  .htag{border:1.5px solid;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:2px}
+  .htag.c{border-color:#00d2ff;color:#00d2ff}
+  .htag.g{border-color:#00ff88;color:#00ff88}
+  .htag.r{border-color:#ff1e50;color:#ff1e50}
+
+  /* ORDER DETAILS */
+  .section-label{color:#444;font-size:10px;letter-spacing:3px;margin-bottom:10px;font-weight:700}
+  .rows{background:#111;border-radius:16px;overflow:hidden;border:1px solid #1e1e1e;margin-bottom:18px}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #141414}
+  .row:last-child{border-bottom:none}
+  .row-key{color:#555;font-size:13px;display:flex;align-items:center;gap:8px}
+  .row-icon{font-size:15px}
+  .row-val{font-size:13px;font-weight:700;color:#fff}
+  .row-val.cyan{color:#00d2ff}
+  .row-val.green{color:#00ff88}
+  .row-val.gold{color:#ffd700}
+
+  /* PRICE */
+  .price-box{background:linear-gradient(135deg,#0d1f0d,#111);border-radius:18px;padding:24px;text-align:center;margin-bottom:20px;border:1px solid #00ff8820;position:relative;overflow:hidden}
+  .price-box::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,#00ff8810,transparent 70%)}
+  .price-label{color:#444;font-size:10px;letter-spacing:3px;margin-bottom:8px;font-weight:700}
+  .price{color:#00ff88;font-size:52px;font-weight:700;font-family:'Bebas Neue',cursive;letter-spacing:2px;line-height:1}
+  .price-note{color:#2a6a2a;font-size:11px;letter-spacing:2px;margin-top:6px}
+
+  /* TRUST BADGES */
+  .trust-row{display:flex;gap:8px;margin-bottom:20px}
+  .trust-badge{flex:1;background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:12px 8px;text-align:center}
+  .trust-badge .ticon{font-size:20px;margin-bottom:4px}
+  .trust-badge .tlabel{color:#555;font-size:9px;letter-spacing:1px;font-weight:700}
+
+  /* PROCEED */
+  .proceed-btn{width:100%;background:linear-gradient(135deg,#00d2ff,#00ff88);color:#000;border:none;padding:18px;border-radius:16px;font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;cursor:pointer;transition:all 0.2s;margin-bottom:12px;box-shadow:0 6px 28px #00d2ff33;position:relative;overflow:hidden}
+  .proceed-btn:active{transform:scale(0.98)}
+  .proceed-btn::after{content:'→';position:absolute;right:22px;top:50%;transform:translateY(-50%);font-size:20px}
+  .cancel{text-align:center;color:#444;font-size:13px;cursor:pointer;letter-spacing:1px;transition:color 0.2s}
+  .cancel:hover{color:#888}
+</style>
+</head>
+<body>
+
+<div class="rainbow-bar"></div>
+<div class="topbar">
+  <div class="back-btn" onclick="history.back()">‹</div>
+  <div class="topbar-title">CONFIRM ORDER</div>
+  <div class="topbar-right"></div>
+</div>
+
+<div class="body">
+
+  <!-- PRODUCT HERO -->
+  <div class="product-hero" id="productHero">
+    <div class="hero-emoji" id="heroEmoji">🔥</div>
+    <div class="hero-overlay"></div>
+    <div class="hero-info">
+      <div class="hero-name" id="prodName">PREMIUM COLLECTION</div>
+      <div class="hero-tags">
+        <span class="htag c" id="qualityTag">4K UHD</span>
+        <span class="htag g" id="videoCountTag">5000+ VIDEOS</span>
+        <span class="htag r" id="accessTag">INSTANT LIFETIME</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER DETAILS -->
+  <p class="section-label">ORDER DETAILS</p>
+  <div class="rows">
+    <div class="row">
+      <span class="row-key"><span class="row-icon">📦</span>Access Type</span>
+      <span class="row-val cyan" id="accessType">Instant Lifetime</span>
+    </div>
+    <div class="row">
+      <span class="row-key"><span class="row-icon">🎬</span>Video Quality</span>
+      <span class="row-val" id="vidQuality">4K Ultra HD</span>
+    </div>
+    <div class="row">
+      <span class="row-key"><span class="row-icon">☁️</span>Cloud Link</span>
+      <span class="row-val green">Encrypted Private</span>
+    </div>
+    <div class="row">
+      <span class="row-key"><span class="row-icon">🎧</span>Support</span>
+      <span class="row-val gold">Priority 24/7</span>
+    </div>
+    <div class="row">
+      <span class="row-key"><span class="row-icon">⚡</span>Delivery</span>
+      <span class="row-val green">Within 1 Hour</span>
+    </div>
+  </div>
+
+  <!-- PRICE -->
+  <div class="price-box">
+    <div class="price-label">NET PAYABLE AMOUNT</div>
+    <div class="price" id="price">₹199</div>
+    <div class="price-note">ONE TIME PAYMENT · NO HIDDEN CHARGES</div>
+  </div>
+
+  <!-- TRUST -->
+  <div class="trust-row">
+    <div class="trust-badge"><div class="ticon">🔒</div><div class="tlabel">SECURE</div></div>
+    <div class="trust-badge"><div class="ticon">⚡</div><div class="tlabel">INSTANT</div></div>
+    <div class="trust-badge"><div class="ticon">✅</div><div class="tlabel">VERIFIED</div></div>
+    <div class="trust-badge"><div class="ticon">🔄</div><div class="tlabel">REFUND</div></div>
+  </div>
+
+  <button class="proceed-btn" onclick="window.location.href='payment.html'">PROCEED TO PAYMENT</button>
+  <p class="cancel" onclick="history.back()">← Cancel and Return</p>
+</div>
+
+<script>
+let cfg={};try{cfg=JSON.parse(localStorage.getItem('adminConfig')||'{}');}catch(e){}
+let o={};try{o=JSON.parse(sessionStorage.getItem('pendingOrder')||'{}');}catch(e){}
+
+if(o.productName) document.getElementById('prodName').textContent=o.productName;
+if(o.accessType){
+  document.getElementById('accessType').textContent=o.accessType;
+  document.getElementById('accessTag').textContent=o.accessType.toUpperCase();
+}
+if(o.videoQuality){
+  document.getElementById('vidQuality').textContent=o.videoQuality;
+  document.getElementById('qualityTag').textContent=o.videoQuality;
+}
+if(o.videoCount) document.getElementById('videoCountTag').textContent=o.videoCount+' VIDEOS';
+if(o.price) document.getElementById('price').textContent='₹'+o.price;
+
+// Show product image if available
+const products=cfg.products||[];
+const matchedProd=products.find(p=>p.name===o.productName);
+if(matchedProd&&matchedProd.imageData){
+  const hero=document.getElementById('productHero');
+  const emojiEl=document.getElementById('heroEmoji');
+  const img=document.createElement('img');
+  img.src=matchedProd.imageData;
+  img.className='hero-img';
+  hero.replaceChild(img,emojiEl);
+}
+</script>
+</body>
+</html>

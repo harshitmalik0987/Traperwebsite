@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Restricted</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0d1117;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;padding:20px}
+  .wrap{text-align:center;max-width:380px;width:100%}
+  .phone-icon{width:120px;height:160px;background:linear-gradient(160deg,#1c2230,#252e42);border-radius:18px;margin:0 auto 30px;display:flex;align-items:center;justify-content:center;border:2px solid #2a3550;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+  .phone-icon::after{content:'';position:absolute;bottom:12px;width:28px;height:28px;border-radius:50%;border:2px solid #3a4560}
+  .lock{font-size:48px;line-height:1}
+  h1{color:#fff;font-size:30px;font-weight:700;letter-spacing:1px;margin-bottom:12px}
+  p{color:#8892a4;font-size:14px;line-height:1.7;margin-bottom:28px;padding:0 10px}
+  .options{background:#161c28;border-radius:16px;padding:8px;margin-bottom:24px;border:1px solid #1e2840}
+  .opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;cursor:pointer;transition:background 0.2s}
+  .opt:hover{background:#1e2840}
+  .opt-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+  .fb{background:#1877f2}
+  .home-ic{background:#2a3550}
+  .opt-text{text-align:left}
+  .opt-text span{display:block;color:#8892a4;font-size:11px}
+  .opt-text strong{color:#fff;font-size:14px}
+  .btn{width:100%;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;padding:16px;border-radius:14px;font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity 0.2s}
+  .btn:hover{opacity:0.9}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone-icon"><div class="lock">🔒</div></div>
+  <h1>Access Restricted</h1>
+  <p>This content is optimized for in-app browsing. You are currently viewing this outside of our supported environment.</p>
+  <div class="options">
+    <div class="opt"><div class="opt-icon ig">📷</div><div class="opt-text"><span>Open this link inside</span><strong>Instagram</strong></div></div>
+    <div class="opt"><div class="opt-icon fb" style="color:#fff;font-weight:900;font-size:22px">f</div><div class="opt-text"><span>Open this link inside</span><strong>Facebook</strong></div></div>
+    <div class="opt" onclick="window.location.href='home.html'"><div class="opt-icon home-ic">🏠</div><div class="opt-text"><span>Or visit our</span><strong>Homepage</strong> directly</div></div>
+  </div>
+  <button class="btn" onclick="window.location.href='home.html'">Go to Homepage</button>
+</div>
+</body>
+</html>

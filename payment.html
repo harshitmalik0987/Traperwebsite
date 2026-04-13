@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a0a;color:#fff;font-family:'Rajdhani',sans-serif;min-height:100vh;padding:0 0 30px}
+  .timer-bar{background:#2a0a14;padding:14px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #3a0a20}
+  .timer-bar .icon{font-size:20px}
+  .timer-label{color:#ff4466;font-size:14px;font-weight:700;letter-spacing:2px;flex:1}
+  .timer-val{color:#ff4466;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+  .body{padding:24px 18px}
+  .pay-label{color:#888;font-size:11px;letter-spacing:3px;text-align:center;margin-bottom:6px}
+  .amount{color:#00ff88;font-size:58px;font-weight:700;text-align:center;line-height:1;margin-bottom:24px}
+  .qr-box{background:#fff;border-radius:20px;padding:20px;margin-bottom:20px;text-align:center}
+  .qr-img{width:100%;max-width:240px;height:240px;margin:0 auto;display:block;background:#f0f0f0;border-radius:4px}
+  .pay-btn{display:flex;align-items:center;gap:14px;background:#fff;border:none;border-radius:14px;padding:16px 20px;width:100%;cursor:pointer;margin-bottom:12px;transition:opacity 0.2s;font-family:'Rajdhani',sans-serif}
+  .pay-btn:hover{opacity:0.9}
+  .pay-btn .p-icon{width:38px;height:38px;object-fit:contain;font-size:24px}
+  .pay-btn .p-name{font-size:17px;font-weight:700;color:#333;letter-spacing:0.5px}
+  .dl-btn{width:100%;background:transparent;border:1.5px solid #444;color:#aaa;padding:13px;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-bottom:18px}
+  .upi-row{display:flex;align-items:center;background:#111;border-radius:12px;padding:14px 16px;border:1px solid #222;margin-bottom:14px}
+  .upi-id{flex:1;color:#ccc;font-size:14px;font-family:monospace}
+  .copy-btn{background:#00ff88;color:#000;border:none;padding:8px 16px;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer}
+  .submit-btn{width:100%;background:linear-gradient(135deg,#ff1e50,#ff6b00);color:#fff;border:none;padding:17px;border-radius:14px;font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;cursor:pointer}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;z-index:100}
+  .modal.show{display:flex}
+  .modal-box{background:#111;border-radius:24px;padding:40px 28px;text-align:center;max-width:320px;width:90%;border:1px solid #222}
+  .modal-icon{font-size:60px;margin-bottom:16px}
+  .modal-title{color:#00ff88;font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:2px;margin-bottom:10px}
+  .modal-msg{color:#888;font-size:14px;line-height:1.8;margin-bottom:24px}
+  .modal-btn{background:linear-gradient(135deg,#00d2ff,#00ff88);color:#000;border:none;padding:13px 32px;border-radius:10px;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:1px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="timer-bar">
+  <span class="icon">⏳</span>
+  <span class="timer-label">SESSION EXPIRES IN:</span>
+  <span class="timer-val" id="timer">05:00</span>
+</div>
+<div class="body">
+  <p class="pay-label">TOTAL PAYABLE</p>
+  <div class="amount" id="amount">₹199</div>
+
+  <div class="qr-box">
+    <canvas id="qrCanvas" width="240" height="240"></canvas>
+  </div>
+
+  <button class="pay-btn" onclick="doPaytm()">
+    <span class="p-icon">💙</span>
+    <span class="p-name">Pay Using Paytm</span>
+  </button>
+  <button class="pay-btn" onclick="doPhonePe()">
+    <span class="p-icon" style="color:#5f259f;font-size:22px">₱</span>
+    <span class="p-name">Pay Using PhonePe</span>
+  </button>
+
+  <button class="dl-btn">↓ DOWNLOAD QR</button>
+
+  <div class="upi-row">
+    <span class="upi-id" id="upiId">ahmad657@fam</span>
+    <button class="copy-btn" onclick="copyUPI()">COPY</button>
+  </div>
+
+  <button class="submit-btn" onclick="submitPayment()">I HAVE PAID ✓</button>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-icon">🎉</div>
+    <div class="modal-title">PAYMENT RECEIVED!</div>
+    <div class="modal-msg">You will get Premium Access within <strong style="color:#fff">1 hour</strong>.<br>Our team is verifying your payment.<br>Thank you for your purchase!</div>
+    <button class="modal-btn" onclick="document.getElementById('modal').classList.remove('show')">OK, GOT IT</button>
+  </div>
+</div>
+
+<script>
+// Load admin config
+let cfg = {};
+try { cfg = JSON.parse(localStorage.getItem('adminConfig') || '{}'); } catch(e){}
+let order = {};
+try { order = JSON.parse(sessionStorage.getItem('pendingOrder') || '{}'); } catch(e){}
+
+const upiId = cfg.upiId || 'ahmad657@fam';
+document.getElementById('upiId').textContent = upiId;
+if(order.price) document.getElementById('amount').textContent = '₹' + order.price;
+
+// Simple QR placeholder (colored grid pattern)
+const canvas = document.getElementById('qrCanvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#fff';
+ctx.fillRect(0,0,240,240);
+// Draw a mock QR-like pattern
+const size = 8;
+for(let i=0;i<30;i++){for(let j=0;j<30;j++){if(Math.random()>0.5||(i<7&&j<7)||(i<7&&j>22)||(i>22&&j<7)){ctx.fillStyle='#000';ctx.fillRect(i*8,j*8,7,7);}}}
+ctx.fillStyle='#000';
+// Corner markers
+[[0,0],[23,0],[0,23]].forEach(([x,y])=>{ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.strokeRect(x*8,y*8,56,56);ctx.fillRect(x*8+8,y*8+8,40,40);ctx.fillStyle='#fff';ctx.fillRect(x*8+16,y*8+16,24,24);ctx.fillStyle='#000';ctx.fillRect(x*8+20,y*8+20,16,16);});
+
+// Timer
+let secs = 300;
+const timerEl = document.getElementById('timer');
+const iv = setInterval(()=>{
+  secs--;
+  const m = Math.floor(secs/60), s = secs%60;
+  timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if(secs<=0) clearInterval(iv);
+},1000);
+
+function copyUPI(){ navigator.clipboard && navigator.clipboard.writeText(upiId); }
+function doPaytm(){ window.open(`paytmmp://pay?pa=${upiId}&am=${order.price||199}&cu=INR`,'_blank'); }
+function doPhonePe(){ window.open(`phonepe://pay?pa=${upiId}&am=${order.price||199}&cu=INR`,'_blank'); }
+function submitPayment(){
+  // Send request to admin (via localStorage notification)
+  const requests = JSON.parse(localStorage.getItem('paymentRequests')||'[]');
+  requests.push({id:Date.now(), order, timestamp: new Date().toISOString(), status:'pending'});
+  localStorage.setItem('paymentRequests', JSON.stringify(requests));
+  document.getElementById('modal').classList.add('show');
+}
+</script>
+</body>
+</html>

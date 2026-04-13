@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading Panel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:linear-gradient(160deg,#e8ecf5,#d0d8e8);min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif}
+  .card{background:#fff;border-radius:24px;padding:50px 36px;text-align:center;width:90%;max-width:340px;box-shadow:0 20px 80px rgba(0,0,0,0.12)}
+  .dots{display:flex;gap:10px;justify-content:center;margin-bottom:30px}
+  .dot{width:14px;height:14px;border-radius:50%;animation:bounce 1.2s ease-in-out infinite}
+  .dot:nth-child(1){background:#1a237e;animation-delay:0s}
+  .dot:nth-child(2){background:#00c853;animation-delay:0.15s}
+  .dot:nth-child(3){background:#29b6f6;animation-delay:0.3s}
+  .dot:nth-child(4){background:#ffc107;animation-delay:0.45s}
+  @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-16px)}}
+  .panel-txt{color:#999;font-size:15px;font-weight:500;margin-bottom:10px;letter-spacing:1px}
+  .count{font-size:72px;font-weight:700;color:#5c35e8;line-height:1;margin-bottom:20px;font-variant-numeric:tabular-nums}
+  .bar-wrap{background:#ede8ff;border-radius:20px;height:5px;overflow:hidden;margin-bottom:16px}
+  .bar{height:100%;background:linear-gradient(90deg,#5c35e8,#9c27b0);border-radius:20px;transition:width 1s linear}
+  .wait{color:#aaa;font-size:13px;margin-bottom:6px}
+  .redirect-link{color:#2563eb;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="dots">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+  <p class="panel-txt">Loading Panel...</p>
+  <div class="count" id="count">5</div>
+  <div class="bar-wrap"><div class="bar" id="bar" style="width:0%"></div></div>
+  <p class="wait">Please wait...</p>
+  <span class="redirect-link" onclick="go()">Click here if not redirected</span>
+</div>
+<script>
+let n=5;
+const c=document.getElementById('count');
+const b=document.getElementById('bar');
+const iv=setInterval(()=>{
+  n--;c.textContent=n;
+  b.style.width=((5-n)/5*100)+'%';
+  if(n<=0){clearInterval(iv);go();}
+},1000);
+function go(){window.location.href='login.html';}
+</script>
+</body>
+</html>

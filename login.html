@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#f0f2f8;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;padding:20px}
+  .wrap{background:#fff;border-radius:24px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 10px 50px rgba(0,0,0,0.1)}
+  .hero{background:linear-gradient(160deg,#dde8ff,#eef2ff);padding:30px;text-align:center}
+  .hero-img{font-size:80px;margin-bottom:10px}
+  .body{padding:28px 24px}
+  .title{color:#555;font-size:14px;font-weight:500;text-align:center;margin-bottom:24px;letter-spacing:0.5px}
+  label{display:block;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;letter-spacing:0.5px}
+  .input-wrap{position:relative;margin-bottom:18px}
+  input[type=email],input[type=password]{width:100%;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-family:'Rajdhani',sans-serif;font-size:15px;outline:none;transition:border 0.2s;background:#fafafa}
+  input:focus{border-color:#2563eb;background:#fff}
+  .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;color:#aaa}
+  .remember{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+  .toggle{width:40px;height:22px;background:#ddd;border-radius:20px;position:relative;cursor:pointer;transition:background 0.3s;flex-shrink:0}
+  .toggle.on{background:#2563eb}
+  .toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+  .toggle.on::after{left:20px}
+  .remember-txt{color:#555;font-size:14px;font-weight:500}
+  .btn{width:100%;background:#2563eb;color:#fff;border:none;padding:15px;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:background 0.2s}
+  .btn:hover{background:#1d4ed8}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:100}
+  .modal.show{display:flex}
+  .modal-box{background:#1a1a2e;border-radius:20px;padding:36px 28px;text-align:center;max-width:320px;width:90%;border:1px solid #2a2a4e}
+  .modal-icon{font-size:50px;margin-bottom:16px}
+  .modal-title{color:#fff;font-size:22px;font-weight:700;letter-spacing:1px;margin-bottom:10px}
+  .modal-msg{color:#8892b0;font-size:14px;line-height:1.7;margin-bottom:24px}
+  .modal-btn{background:linear-gradient(135deg,#ff1e50,#ff6b00);color:#fff;border:none;padding:12px 32px;border-radius:10px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero"><div class="hero-img">🔐</div></div>
+  <div class="body">
+    <p class="title">Sign in to your account</p>
+    <label>Email</label>
+    <div class="input-wrap"><input type="email" id="email" placeholder=""></div>
+    <label>Password</label>
+    <div class="input-wrap">
+      <input type="password" id="pass" placeholder="">
+      <span class="eye" onclick="togglePass()">👁</span>
+    </div>
+    <div class="remember">
+      <div class="toggle" id="tog" onclick="this.classList.toggle('on')"></div>
+      <span class="remember-txt">Remember me</span>
+    </div>
+    <button class="btn" onclick="doLogin()">Login →</button>
+  </div>
+</div>
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-icon">🔧</div>
+    <div class="modal-title">Under Maintenance</div>
+    <div class="modal-msg">Panel is currently under maintenance. Please try again after some time.</div>
+    <button class="modal-btn" onclick="document.getElementById('modal').classList.remove('show')">OK</button>
+  </div>
+</div>
+<script>
+function togglePass(){const p=document.getElementById('pass');p.type=p.type==='password'?'text':'password';}
+function doLogin(){document.getElementById('modal').classList.add('show');}
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PREMIUM DESI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Rajdhani',sans-serif}
+  .card{background:#1a1a1a;border-radius:20px;padding:40px 30px;text-align:center;width:90%;max-width:380px;box-shadow:0 0 60px rgba(255,30,80,0.15)}
+  .logo{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#ff1e50,#ff6b00);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:28px;color:#fff;letter-spacing:2px;animation:pulse 1.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,30,80,0.4)}50%{box-shadow:0 0 0 15px rgba(255,30,80,0)}}
+  h2{color:#fff;font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:3px;margin-bottom:6px}
+  .sub{color:#888;font-size:13px;margin-bottom:25px}
+  .bar-wrap{background:#2a2a2a;border-radius:20px;height:6px;overflow:hidden;margin-bottom:14px}
+  .bar{height:100%;background:linear-gradient(90deg,#ff1e50,#ff6b00);border-radius:20px;width:0;transition:width 0.1s linear}
+  .msg{color:#aaa;font-size:13px}
+  .secure{color:#555;font-size:11px;margin-top:20px;display:flex;align-items:center;justify-content:center;gap:6px}
+  .secure::before{content:'🛡️'}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo" id="logoImg">PD</div>
+  <h2>Loading Please Wait</h2>
+  <p class="sub">Preparing your premium content...</p>
+  <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+  <p class="msg" id="msg">Connecting securely...</p>
+  <p class="secure">100% Redirecting Securely</p>
+</div>
+<script>
+const msgs=["Connecting securely...","Verifying access...","Loading content...","Almost there...","Redirecting..."];
+let p=0,i=0;
+const bar=document.getElementById('bar');
+const msg=document.getElementById('msg');
+const iv=setInterval(()=>{
+  p+=2;bar.style.width=p+'%';
+  if(p%20===0&&i<msgs.length)msg.textContent=msgs[i++];
+  if(p>=100){
+    clearInterval(iv);
+    // Detect in-app browser
+    const ua=navigator.userAgent.toLowerCase();
+    const inApp=ua.includes('instagram')||ua.includes('fbav')||ua.includes('facebook')||ua.includes('fban');
+    if(inApp){window.location.href='content.html?ref=index';}
+    else{window.location.href='restricted.html';}
+  }
+},60);
+// Load logo from admin config
+try{const cfg=JSON.parse(localStorage.getItem('adminConfig')||'{}');
+if(cfg.logoUrl){const img=document.createElement('img');img.src=cfg.logoUrl;img.style.cssText='width:100%;height:100%;border-radius:50%;object-fit:cover';document.getElementById('logoImg').innerHTML='';document.getElementById('logoImg').appendChild(img);}
+if(cfg.siteName)document.title=cfg.siteName;}catch(e){}
+</script>
+</body>
+</html>

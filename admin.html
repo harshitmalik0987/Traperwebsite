@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#070b14;color:#fff;font-family:'Rajdhani',sans-serif;min-height:100vh}
+
+  /* PASSWORD SCREEN */
+  #lockScreen{position:fixed;inset:0;background:#070b14;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:30px}
+  .lock-logo{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:4px;color:#00d2ff;text-align:center}
+  .lock-logo span{color:#ff1e50}
+  .lock-subtitle{color:#556;font-size:13px;letter-spacing:3px;text-align:center;margin-top:-16px}
+  .lock-box{background:#0d1424;border:1px solid #1a2540;border-radius:16px;padding:28px 24px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px}
+  .lock-icon{font-size:40px;text-align:center}
+  .lock-label{color:#8892a4;font-size:12px;letter-spacing:2px;text-align:center}
+  .lock-input{background:#111c35;border:1px solid #1a2540;border-radius:10px;padding:14px 16px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:16px;outline:none;width:100%;letter-spacing:2px;transition:border 0.2s;text-align:center}
+  .lock-input:focus{border-color:#00d2ff}
+  .lock-btn{background:linear-gradient(135deg,#00d2ff,#0099cc);color:#000;border:none;padding:14px;border-radius:10px;font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:3px;cursor:pointer;width:100%;transition:opacity 0.2s}
+  .lock-btn:hover{opacity:0.9}
+  .lock-err{color:#ff1e50;font-size:13px;text-align:center;letter-spacing:1px;display:none}
+
+  /* ADMIN PANEL */
+  #adminPanel{display:none}
+  .header{background:linear-gradient(135deg,#0d1424,#111c35);padding:16px 20px;border-bottom:1px solid #1a2540;display:flex;align-items:center;justify-content:space-between}
+  .header h1{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;color:#00d2ff}
+  .header-right{display:flex;align-items:center;gap:10px}
+  .badge{background:#ff1e50;color:#fff;font-size:10px;padding:3px 10px;border-radius:20px;letter-spacing:2px;font-weight:700}
+  .logout-btn{background:#1a2540;border:1px solid #2a3550;color:#8892a4;font-size:11px;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:1px}
+  .logout-btn:hover{color:#ff1e50;border-color:#ff1e50}
+
+  .nav-tabs{display:flex;background:#0d1424;border-bottom:1px solid #1a2540;overflow-x:auto}
+  .tab{padding:12px 16px;font-size:12px;font-weight:600;letter-spacing:1px;color:#556;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s}
+  .tab.active{color:#00d2ff;border-bottom-color:#00d2ff}
+  .tab:hover:not(.active){color:#aaa}
+
+  .page{display:none;padding:16px}
+  .page.active{display:block}
+  .section{background:#0d1424;border-radius:14px;padding:18px;margin-bottom:14px;border:1px solid #1a2540}
+  .section-title{color:#00d2ff;font-size:11px;letter-spacing:3px;margin-bottom:16px;font-weight:700}
+  label{display:block;color:#8892a4;font-size:11px;letter-spacing:1px;margin-bottom:5px;margin-top:12px}
+  label:first-of-type{margin-top:0}
+  input,textarea,select{width:100%;background:#111c35;border:1px solid #1a2540;border-radius:8px;padding:10px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;transition:border 0.2s}
+  input:focus,textarea:focus,select:focus{border-color:#00d2ff}
+  textarea{min-height:80px;resize:vertical}
+  .save-btn{background:linear-gradient(135deg,#00d2ff,#0099cc);color:#000;border:none;padding:12px 28px;border-radius:10px;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;cursor:pointer;margin-top:16px;transition:opacity 0.2s;width:100%}
+  .save-btn:hover{opacity:0.9}
+  .add-btn{background:#111c35;border:1px dashed #2a3550;color:#00d2ff;padding:11px;border-radius:10px;width:100%;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer;margin-top:10px}
+  .product-item{background:#070b14;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #1a2540;position:relative}
+  .del-btn{position:absolute;top:10px;right:10px;background:#ff1e50;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#00ff88;color:#000;padding:10px 24px;border-radius:20px;font-weight:700;font-size:14px;letter-spacing:1px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:9998}
+  .toast.show{opacity:1}
+  .request-card{background:#070b14;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #1a2540}
+  .req-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .req-id{color:#00d2ff;font-size:12px;font-family:monospace}
+  .req-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;letter-spacing:1px}
+  .status-pending{background:#2a1a00;color:#ffd700}
+  .status-approved{background:#002a14;color:#00ff88}
+  .req-detail{color:#8892a4;font-size:12px;line-height:1.8}
+  .approve-btn{background:#00ff88;color:#000;border:none;padding:7px 16px;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat-box{background:#0d1424;border-radius:12px;padding:16px;text-align:center;border:1px solid #1a2540}
+  .stat-num{font-size:28px;font-weight:700;color:#00ff88;font-family:'Bebas Neue',cursive}
+  .stat-label{color:#556;font-size:10px;letter-spacing:2px;margin-top:4px}
+
+  /* IMAGE UPLOAD */
+  .img-upload-area{border:2px dashed #2a3550;border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s;position:relative;background:#070b14;margin-top:8px}
+  .img-upload-area:hover{border-color:#00d2ff}
+  .img-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .img-preview{width:100%;height:140px;object-fit:cover;border-radius:8px;margin-top:8px;display:none}
+  .img-preview.show{display:block}
+  .upload-icon{font-size:28px;margin-bottom:6px}
+  .upload-text{color:#556;font-size:12px;letter-spacing:1px}
+
+  /* CONTACT SECTION */
+  .contact-row{background:#070b14;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #1a2540}
+  .contact-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .contact-type-badge{font-size:11px;color:#00d2ff;letter-spacing:1px;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div>
+    <div class="lock-logo">⚡ VOID<span>ADMIN</span></div>
+    <div class="lock-subtitle">RESTRICTED ACCESS</div>
+  </div>
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <div class="lock-label">ENTER ADMIN PASSWORD</div>
+    <input class="lock-input" type="password" id="pwInput" placeholder="••••••••••••" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="lock-btn" onclick="checkPw()">UNLOCK PANEL</button>
+    <div class="lock-err" id="pwErr">❌ WRONG PASSWORD. ACCESS DENIED.</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="header">
+    <h1>⚡ ADMIN PANEL</h1>
+    <div class="header-right">
+      <span class="badge">LIVE</span>
+      <button class="logout-btn" onclick="logout()">LOCK</button>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <div class="tab active" onclick="switchTab(this,'dashboard')">DASHBOARD</div>
+    <div class="tab" onclick="switchTab(this,'site')">SITE CONFIG</div>
+    <div class="tab" onclick="switchTab(this,'products')">PRODUCTS</div>
+    <div class="tab" onclick="switchTab(this,'payment')">PAYMENT</div>
+    <div class="tab" onclick="switchTab(this,'contacts')">CONTACTS</div>
+    <div class="tab" onclick="switchTab(this,'requests')">REQUESTS</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="tab-dashboard">
+    <div class="stats">
+      <div class="stat-box"><div class="stat-num" id="statReq">0</div><div class="stat-label">REQUESTS</div></div>
+      <div class="stat-box"><div class="stat-num" id="statApproved">0</div><div class="stat-label">APPROVED</div></div>
+      <div class="stat-box"><div class="stat-num" id="statProducts">0</div><div class="stat-label">PRODUCTS</div></div>
+      <div class="stat-box"><div class="stat-num" id="statRevenue">₹0</div><div class="stat-label">REVENUE</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">QUICK LINKS</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="content.html" target="_blank" style="color:#00d2ff;font-size:14px;font-weight:600;text-decoration:none">→ View Content Page</a>
+        <a href="restricted.html" target="_blank" style="color:#00d2ff;font-size:14px;font-weight:600;text-decoration:none">→ View Restricted Page</a>
+        <a href="login.html" target="_blank" style="color:#00d2ff;font-size:14px;font-weight:600;text-decoration:none">→ View Login Page</a>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">STORAGE USAGE</div>
+      <div style="color:#8892a4;font-size:13px" id="storageInfo">Loading…</div>
+    </div>
+  </div>
+
+  <!-- SITE CONFIG -->
+  <div class="page" id="tab-site">
+    <div class="section">
+      <div class="section-title">SITE SETTINGS</div>
+      <label>Site Name / Title</label>
+      <input type="text" id="siteName" placeholder="PREMIUM DESI">
+      <label>Big Pack Banner Text</label>
+      <input type="text" id="bigPackText" placeholder="ALL-IN-ONE BIG PACK ACCESS ₹199">
+      <label>Big Pack Price (₹)</label>
+      <input type="number" id="bigPackPrice" placeholder="199">
+      <label>Wallet Balance (₹) shown to users</label>
+      <input type="number" id="walletAmt" placeholder="10">
+      <button class="save-btn" onclick="saveSite()">SAVE SETTINGS</button>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="page" id="tab-products">
+    <div class="section">
+      <div class="section-title">MANAGE PRODUCTS</div>
+      <div id="productsList"></div>
+      <button class="add-btn" onclick="addProduct()">+ ADD NEW PRODUCT</button>
+      <button class="save-btn" onclick="saveProducts()">SAVE ALL PRODUCTS</button>
+    </div>
+  </div>
+
+  <!-- PAYMENT -->
+  <div class="page" id="tab-payment">
+    <div class="section">
+      <div class="section-title">PAYMENT SETTINGS</div>
+      <label>UPI ID</label>
+      <input type="text" id="upiId" placeholder="yourname@upi">
+      <label>QR Code Image</label>
+      <div class="img-upload-area" id="qrUploadArea">
+        <input type="file" accept="image/*" onchange="handleQrUpload(event)">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">TAP TO UPLOAD QR CODE</div>
+      </div>
+      <img id="qrPreview" class="img-preview" alt="QR Preview">
+      <label>Paytm Number</label>
+      <input type="text" id="paytmNum" placeholder="9999999999">
+      <label>PhonePe Number</label>
+      <input type="text" id="phonePeNum" placeholder="9999999999">
+      <label>GPay Number</label>
+      <input type="text" id="gpayNum" placeholder="9999999999">
+      <button class="save-btn" onclick="savePayment()">SAVE PAYMENT</button>
+    </div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div class="page" id="tab-contacts">
+    <div class="section">
+      <div class="section-title">MANAGE CONTACT BUTTONS</div>
+      <p style="color:#556;font-size:12px;margin-bottom:12px;letter-spacing:1px">These buttons appear in the Support page of content.html</p>
+      <div id="contactsList"></div>
+      <button class="add-btn" onclick="addContact()">+ ADD CONTACT BUTTON</button>
+      <button class="save-btn" onclick="saveContacts()">SAVE CONTACTS</button>
+    </div>
+  </div>
+
+  <!-- REQUESTS -->
+  <div class="page" id="tab-requests">
+    <div class="section">
+      <div class="section-title">PAYMENT REQUESTS</div>
+      <div id="requestsList"><p style="color:#556;font-size:13px">No requests yet.</p></div>
+    </div>
+    <button class="save-btn" style="background:linear-gradient(135deg,#ff1e50,#cc0033);margin-top:0" onclick="clearRequests()">CLEAR ALL REQUESTS</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ SAVED</div>
+
+<script>
+const PASS = 'VoidProject#123';
+
+function checkPw(){
+  const v = document.getElementById('pwInput').value;
+  const err = document.getElementById('pwErr');
+  if(v === PASS){
+    sessionStorage.setItem('adminAuth','1');
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    init();
+  } else {
+    err.style.display='block';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+    setTimeout(()=>err.style.display='none',3000);
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem('adminAuth');
+  location.reload();
+}
+
+// Check if already authed
+if(sessionStorage.getItem('adminAuth')==='1'){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('adminPanel').style.display='block';
+}
+
+let cfg = {};
+try { cfg = JSON.parse(localStorage.getItem('adminConfig') || '{}'); } catch(e){}
+
+function init(){
+  cfg.products = cfg.products || [{name:'INDIAN COLLECTION',emoji:'🔥',videoCount:'5000+',halfPrice:99,fullPrice:199,tag:'4K UHD',imageData:''}];
+  cfg.contacts = cfg.contacts || [
+    {label:'Message on Telegram',icon:'✈️',url:'https://t.me/sxbot',style:'tg'},
+    {label:'Email Support',icon:'✉️',url:'mailto:support@example.com',style:'email'}
+  ];
+
+  document.getElementById('siteName').value = cfg.siteName||'';
+  document.getElementById('bigPackText').value = cfg.bigPackText||'';
+  document.getElementById('bigPackPrice').value = cfg.bigPackPrice||'';
+  document.getElementById('walletAmt').value = cfg.walletAmt||'10';
+  document.getElementById('upiId').value = cfg.upiId||'';
+  document.getElementById('paytmNum').value = cfg.paytmNum||'';
+  document.getElementById('phonePeNum').value = cfg.phonePeNum||'';
+  document.getElementById('gpayNum').value = cfg.gpayNum||'';
+
+  if(cfg.qrImageData){
+    const p = document.getElementById('qrPreview');
+    p.src = cfg.qrImageData;
+    p.classList.add('show');
+  }
+
+  renderProducts();
+  renderContacts();
+  updateStats();
+  updateStorage();
+}
+
+if(sessionStorage.getItem('adminAuth')==='1') init();
+
+function switchTab(el, t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+  if(t==='requests') renderRequests();
+  if(t==='dashboard'){updateStats();updateStorage();}
+}
+
+function toast(msg='✓ SAVED'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function handleQrUpload(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    cfg.qrImageData=ev.target.result;
+    const p=document.getElementById('qrPreview');
+    p.src=ev.target.result;
+    p.classList.add('show');
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveSite(){
+  cfg.siteName=document.getElementById('siteName').value;
+  cfg.bigPackText=document.getElementById('bigPackText').value;
+  cfg.bigPackPrice=document.getElementById('bigPackPrice').value;
+  cfg.walletAmt=document.getElementById('walletAmt').value;
+  localStorage.setItem('adminConfig',JSON.stringify(cfg));
+  toast();
+}
+
+function savePayment(){
+  cfg.upiId=document.getElementById('upiId').value;
+  cfg.paytmNum=document.getElementById('paytmNum').value;
+  cfg.phonePeNum=document.getElementById('phonePeNum').value;
+  cfg.gpayNum=document.getElementById('gpayNum').value;
+  localStorage.setItem('adminConfig',JSON.stringify(cfg));
+  toast();
+}
+
+// PRODUCTS
+function renderProducts(){
+  const list=document.getElementById('productsList');
+  list.innerHTML='';
+  (cfg.products||[]).forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className='product-item';
+    const hasImg=p.imageData&&p.imageData.length>10;
+    div.innerHTML=`
+      <button class="del-btn" onclick="deleteProduct(${i})">✕ DEL</button>
+      <label>Product Name</label>
+      <input type="text" value="${p.name||''}" onchange="cfg.products[${i}].name=this.value" placeholder="e.g. INDIAN COLLECTION">
+      <label>Tag (e.g. 4K UHD)</label>
+      <input type="text" value="${p.tag||'4K UHD'}" onchange="cfg.products[${i}].tag=this.value">
+      <label>Number of Videos</label>
+      <input type="text" value="${p.videoCount||'5000+'}" onchange="cfg.products[${i}].videoCount=this.value">
+      <div class="grid2">
+        <div><label>Half Pack (₹)</label><input type="number" value="${p.halfPrice||99}" onchange="cfg.products[${i}].halfPrice=+this.value"></div>
+        <div><label>Full Access (₹)</label><input type="number" value="${p.fullPrice||199}" onchange="cfg.products[${i}].fullPrice=+this.value"></div>
+      </div>
+      <label>Product Image (Upload Photo)</label>
+      <div class="img-upload-area">
+        <input type="file" accept="image/*" onchange="handleProductImg(event,${i})">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-text">${hasImg?'TAP TO CHANGE IMAGE':'TAP TO UPLOAD PRODUCT IMAGE'}</div>
+      </div>
+      <img id="prodImg_${i}" class="img-preview ${hasImg?'show':''}" src="${hasImg?p.imageData:''}" alt="Product">
+    `;
+    list.appendChild(div);
+  });
+}
+
+function handleProductImg(e,i){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    cfg.products[i].imageData=ev.target.result;
+    const img=document.getElementById('prodImg_'+i);
+    img.src=ev.target.result;
+    img.classList.add('show');
+    e.target.parentElement.querySelector('.upload-text').textContent='TAP TO CHANGE IMAGE';
+  };
+  reader.readAsDataURL(file);
+}
+
+function addProduct(){
+  cfg.products.push({name:'NEW COLLECTION',videoCount:'1000+',halfPrice:99,fullPrice:199,tag:'4K UHD',imageData:''});
+  renderProducts();
+}
+
+function deleteProduct(i){cfg.products.splice(i,1);renderProducts();}
+
+function saveProducts(){
+  localStorage.setItem('adminConfig',JSON.stringify(cfg));
+  toast('✓ PRODUCTS SAVED');
+}
+
+// CONTACTS
+function renderContacts(){
+  const list=document.getElementById('contactsList');
+  list.innerHTML='';
+  (cfg.contacts||[]).forEach((c,i)=>{
+    const div=document.createElement('div');
+    div.className='contact-row';
+    div.innerHTML=`
+      <div class="contact-row-head">
+        <span class="contact-type-badge">BUTTON ${i+1}</span>
+        <button class="del-btn" style="position:static" onclick="deleteContact(${i})">✕</button>
+      </div>
+      <label>Button Label</label>
+      <input type="text" value="${c.label||''}" onchange="cfg.contacts[${i}].label=this.value" placeholder="Message on Telegram">
+      <label>Icon / Emoji</label>
+      <input type="text" value="${c.icon||'✈️'}" onchange="cfg.contacts[${i}].icon=this.value" placeholder="✈️">
+      <label>Link / URL (Telegram, WhatsApp, mailto:, etc.)</label>
+      <input type="text" value="${c.url||''}" onchange="cfg.contacts[${i}].url=this.value" placeholder="https://t.me/yourusername">
+      <label>Button Style</label>
+      <select onchange="cfg.contacts[${i}].style=this.value">
+        <option value="tg" ${c.style==='tg'?'selected':''}>Telegram Blue</option>
+        <option value="email" ${c.style==='email'?'selected':''}>Red / Orange</option>
+        <option value="whatsapp" ${c.style==='whatsapp'?'selected':''}>WhatsApp Green</option>
+        <option value="yellow" ${c.style==='yellow'?'selected':''}>Golden Yellow</option>
+      </select>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function addContact(){
+  cfg.contacts.push({label:'New Contact',icon:'💬',url:'https://t.me/',style:'tg'});
+  renderContacts();
+}
+
+function deleteContact(i){cfg.contacts.splice(i,1);renderContacts();}
+
+function saveContacts(){
+  localStorage.setItem('adminConfig',JSON.stringify(cfg));
+  toast('✓ CONTACTS SAVED');
+}
+
+// REQUESTS
+function renderRequests(){
+  const reqs=JSON.parse(localStorage.getItem('paymentRequests')||'[]');
+  const el=document.getElementById('requestsList');
+  if(!reqs.length){el.innerHTML='<p style="color:#556;font-size:13px">No requests yet.</p>';return;}
+  el.innerHTML=reqs.slice().reverse().map((r,ri)=>{
+    const origIdx=reqs.length-1-ri;
+    return `<div class="request-card">
+      <div class="req-header">
+        <span class="req-id">#${r.id||origIdx}</span>
+        <span class="req-status ${r.status==='approved'?'status-approved':'status-pending'}">${(r.status||'pending').toUpperCase()}</span>
+      </div>
+      <div class="req-detail">
+        Product: <strong style="color:#fff">${r.order?.productName||'—'}</strong><br>
+        Amount: <strong style="color:#00ff88">₹${r.order?.price||'—'}</strong><br>
+        Access: ${r.order?.accessType||'—'}<br>
+        Time: ${new Date(r.timestamp).toLocaleString()}
+      </div>
+      ${r.status!=='approved'?`<button class="approve-btn" onclick="approveReq(${origIdx})">✓ APPROVE</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function approveReq(i){
+  const reqs=JSON.parse(localStorage.getItem('paymentRequests')||'[]');
+  reqs[i].status='approved';
+  localStorage.setItem('paymentRequests',JSON.stringify(reqs));
+  renderRequests();
+  updateStats();
+  toast('✓ APPROVED');
+}
+
+function clearRequests(){
+  if(!confirm('Clear ALL payment requests?')) return;
+  localStorage.setItem('paymentRequests','[]');
+  renderRequests();
+  updateStats();
+  toast('✓ CLEARED');
+}
+
+function updateStats(){
+  const reqs=JSON.parse(localStorage.getItem('paymentRequests')||'[]');
+  document.getElementById('statReq').textContent=reqs.length;
+  document.getElementById('statApproved').textContent=reqs.filter(r=>r.status==='approved').length;
+  document.getElementById('statProducts').textContent=(cfg.products||[]).length;
+  const rev=reqs.filter(r=>r.status==='approved').reduce((s,r)=>s+(r.order?.price||0),0);
+  document.getElementById('statRevenue').textContent='₹'+rev;
+}
+
+function updateStorage(){
+  try{
+    const used=new Blob([JSON.stringify(localStorage)]).size;
+    document.getElementById('storageInfo').textContent=`LocalStorage used: ~${(used/1024).toFixed(1)} KB`;
+  }catch(e){
+    document.getElementById('storageInfo').textContent='Unable to check storage.';
+  }
+}
+</script>
+</body>
+</html>

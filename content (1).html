@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PremiumHUB</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#080808;color:#fff;font-family:'Rajdhani',sans-serif;min-height:100vh;padding-bottom:88px;overflow-x:hidden}
+
+  /* LOADING SCREEN */
+  #loadScreen{position:fixed;inset:0;background:#080808;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.5s}
+  #loadScreen.gone{opacity:0;pointer-events:none}
+  .load-logo{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:4px;color:#00d2ff}
+  .load-logo span{color:#ff1e50}
+  .load-spinner{width:40px;height:40px;border:3px solid #1a2540;border-top-color:#00d2ff;border-radius:50%;animation:spin 0.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .load-text{color:#556;font-size:12px;letter-spacing:3px}
+
+  /* TICKER */
+  .ticker-wrap{background:#0a0a0a;border-bottom:1px solid #00d2ff22;overflow:hidden;height:0;transition:height 0.3s}
+  .ticker-wrap.show{height:32px}
+  .ticker-inner{display:flex;align-items:center;height:32px;white-space:nowrap;animation:ticker 25s linear infinite}
+  @keyframes ticker{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
+  .ticker-text{color:#00d2ff;font-size:11px;letter-spacing:2px;font-weight:700}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #161616;background:#0a0a0a;position:sticky;top:0;z-index:40;backdrop-filter:blur(10px)}
+  .logo{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:3px}
+  .logo span{color:#ff1e50}
+  .live-pill{display:flex;align-items:center;gap:6px;background:#0d1f0d;border:1px solid #00ff8833;border-radius:20px;padding:5px 12px}
+  .live-dot{width:7px;height:7px;background:#00ff88;border-radius:50%;animation:pulse 1.2s ease-in-out infinite;box-shadow:0 0 6px #00ff88}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
+  .live-text{color:#00ff88;font-size:11px;font-weight:700;letter-spacing:2px}
+
+  .page{display:none}.page.active{display:block}
+
+  /* HOME */
+  .wallet{background:linear-gradient(135deg,#111,#181818);border-radius:18px;margin:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;border:1px solid #222;position:relative;overflow:hidden}
+  .wallet::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 50%,#00ff8808,transparent 60%)}
+  .wallet-label{color:#555;font-size:10px;letter-spacing:3px;margin-bottom:6px}
+  .wallet-amt{color:#00ff88;font-size:30px;font-weight:700;font-family:'Bebas Neue',cursive;letter-spacing:2px}
+  .vip{background:linear-gradient(135deg,#00d2ff,#00ff88);color:#000;padding:8px 18px;border-radius:20px;font-weight:700;font-size:12px;letter-spacing:2px;box-shadow:0 4px 16px #00d2ff44}
+
+  .big-pack{background:linear-gradient(135deg,#ffd700,#ff9500,#ffb300);color:#000;margin:0 14px 16px;border-radius:16px;padding:18px;text-align:center;font-family:'Bebas Neue',cursive;font-size:19px;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 28px rgba(255,180,0,0.35);position:relative;overflow:hidden;transition:transform 0.15s}
+  .big-pack:active{transform:scale(0.97)}
+  .big-pack::after{content:'🔥';position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:22px}
+
+  /* MEMBERSHIP ACTIVE BANNER */
+  .membership-banner{margin:0 14px 14px;border-radius:18px;overflow:hidden;border:1px solid #00ff8830;background:linear-gradient(135deg,#051a0f,#0a2a18);display:none}
+  .membership-banner.show{display:block}
+  .mb-top{display:flex;align-items:center;gap:12px;padding:16px 18px 12px}
+  .mb-icon{font-size:36px}
+  .mb-info{flex:1}
+  .mb-title{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:3px;color:#00ff88;margin-bottom:3px}
+  .mb-sub{color:#2a6a2a;font-size:11px;letter-spacing:2px;font-weight:700}
+  .mb-details{padding:0 18px 14px;display:flex;flex-direction:column;gap:6px}
+  .mb-row{display:flex;align-items:center;justify-content:space-between;background:#071410;border-radius:10px;padding:10px 14px;border:1px solid #0d2a1e}
+  .mb-row-key{color:#2a6a2a;font-size:12px;letter-spacing:1px}
+  .mb-row-val{color:#00ff88;font-size:12px;font-weight:700;letter-spacing:1px}
+  .mb-link-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#00ff88,#00cc66);color:#000;border:none;border-radius:12px;padding:14px;margin:0 18px 16px;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;cursor:pointer;text-decoration:none;box-shadow:0 4px 20px #00ff8844;transition:all 0.2s}
+  .mb-link-btn:active{transform:scale(0.97)}
+
+  /* PENDING BANNER */
+  .pending-banner{margin:0 14px 14px;border-radius:18px;padding:16px 18px;background:linear-gradient(135deg,#1a1200,#2a1e00);border:1px solid #ffd70030;display:none;align-items:center;gap:14px}
+  .pending-banner.show{display:flex}
+  .pb-icon{font-size:32px;animation:spin 3s linear infinite}
+  .pb-title{font-family:'Bebas Neue',cursive;font-size:17px;letter-spacing:2px;color:#ffd700;margin-bottom:3px}
+  .pb-sub{color:#665500;font-size:11px;letter-spacing:1px}
+
+  .product-card{margin:0 14px 22px;border-radius:22px;overflow:hidden;background:#111;border:1px solid #1e1e1e;box-shadow:0 8px 32px #00000055;position:relative;transition:transform 0.15s}
+  .product-card:active{transform:scale(0.99)}
+  .prod-img{width:100%;height:240px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#1a0a14,#2d0a20);overflow:hidden;position:relative}
+  .prod-img img{width:100%;height:100%;object-fit:cover}
+  .prod-img-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,#111 100%)}
+  .product-name{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:3px;padding:14px 18px 6px;line-height:1}
+  .tags{display:flex;gap:8px;padding:0 18px 14px;flex-wrap:wrap}
+  .tag{border:1.5px solid;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;letter-spacing:2px}
+  .tag.cyan{border-color:#00d2ff;color:#00d2ff;background:#00d2ff0d}
+  .tag.green{border-color:#00ff88;color:#00ff88;background:#00ff880d}
+  .tag.red{border-color:#ff1e50;color:#ff1e50;background:#ff1e500d}
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 16px}
+  .btn{padding:14px;border-radius:11px;border:none;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.15s}
+  .btn:active{transform:scale(0.96)}
+  .btn-dark{background:#1a1a1a;color:#aaa;border:1px solid #2a2a2a}
+  .btn-outline{background:transparent;color:#ffd700;border:1.5px solid #ffd700}
+  .btn-half{background:transparent;color:#00ff88;border:1.5px solid #00ff88}
+  .btn-full{background:linear-gradient(135deg,#ff1e50,#ff6b00);color:#fff;box-shadow:0 4px 16px #ff1e5033}
+
+  .sec-head{display:flex;align-items:center;gap:12px;margin:18px 16px 14px}
+  .sec-head .bar{width:4px;height:28px;background:linear-gradient(to bottom,#ff1e50,#ff6b00);border-radius:3px;flex-shrink:0}
+  .sec-head h2{font-size:24px;font-weight:700;color:#fff;letter-spacing:1px}
+
+  /* REVIEWS */
+  .review-card{background:#111;border-radius:18px;padding:16px;margin:0 14px 12px;display:flex;align-items:flex-start;gap:14px;border:1px solid #1a1a1a}
+  .avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:15px;color:#fff;flex-shrink:0;font-weight:700}
+  .rev-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+  .rev-name{font-size:15px;font-weight:700;color:#fff}
+  .stars{color:#ffd700;font-size:12px;letter-spacing:2px}
+  .rev-text{color:#888;font-size:13px;line-height:1.6}
+  .rev-badge{display:inline-block;background:#00ff8815;border:1px solid #00ff8830;color:#00ff88;font-size:10px;padding:2px 8px;border-radius:10px;letter-spacing:1px;margin-top:6px;font-weight:700}
+
+  /* PROFILE */
+  .profile-hero{background:linear-gradient(135deg,#0d0d1a,#1a0d0d);margin:0 14px;border-radius:22px;padding:30px 20px 24px;text-align:center;border:1px solid #1e1e1e;position:relative;overflow:hidden}
+  .profile-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,#ff1e5015,transparent 60%)}
+  .anon-icon{font-size:60px;margin-bottom:12px}
+  .anon-name{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;margin-bottom:8px}
+
+  .profile-status{margin:14px 14px 0;border-radius:18px;overflow:hidden;border:1px solid #1e1e1e}
+  .ps-header{padding:14px 18px 10px;display:flex;align-items:center;gap:10px}
+  .ps-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .ps-dot.active{background:#00ff88;box-shadow:0 0 8px #00ff88;animation:pulse 1.5s infinite}
+  .ps-dot.pending{background:#ffd700;box-shadow:0 0 8px #ffd700}
+  .ps-dot.none{background:#333}
+  .ps-title{font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px}
+  .ps-body{padding:0 18px 16px;display:flex;flex-direction:column;gap:8px}
+  .ps-row{display:flex;justify-content:space-between;font-size:13px}
+  .ps-key{color:#555}
+  .ps-val{font-weight:700}
+  .ps-link-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#00ff88,#00cc66);color:#000;border:none;border-radius:12px;padding:13px;margin:4px 0 0;font-family:'Bebas Neue',cursive;font-size:17px;letter-spacing:2px;cursor:pointer;text-decoration:none;width:100%;box-shadow:0 4px 16px #00ff8833}
+
+  /* SUPPORT */
+  .support-hero{background:linear-gradient(135deg,#0d0d0d,#111);margin:0 14px;border-radius:22px;padding:28px 20px;border:1px solid #1e1e1e;text-align:center}
+  .support-icon{font-size:52px;margin-bottom:12px}
+  .support-title{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:3px;margin-bottom:10px}
+  .support-desc{color:#666;font-size:13px;line-height:1.8;margin-bottom:24px}
+  .support-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:17px;border-radius:14px;border:none;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-bottom:10px;transition:all 0.2s;text-decoration:none}
+  .support-btn:active{transform:scale(0.97)}
+  .btn-tg{background:linear-gradient(135deg,#0088cc,#00aaff);color:#fff;box-shadow:0 4px 20px #0088cc44}
+  .btn-email{background:linear-gradient(135deg,#ff1e50,#ff6b00);color:#fff;box-shadow:0 4px 20px #ff1e5044}
+  .btn-whatsapp{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;box-shadow:0 4px 20px #25d36644}
+  .btn-yellow{background:linear-gradient(135deg,#ffd700,#ffb300);color:#000;box-shadow:0 4px 20px #ffd70044}
+  .support-note{color:#333;font-size:11px;letter-spacing:1px;margin-top:14px}
+
+  .nav{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;border-top:1px solid #161616;display:flex;padding:8px 0 14px;z-index:50}
+  .nav-item{flex:1;text-align:center;cursor:pointer;padding:4px 0;transition:all 0.15s}
+  .nav-item .icon{font-size:20px;transition:transform 0.2s}
+  .nav-item .label{font-size:9px;letter-spacing:1.5px;margin-top:3px;color:#333;font-weight:600;transition:color 0.2s}
+  .nav-item.active .label{color:#ff1e50}
+  .nav-item.active .icon{transform:translateY(-2px)}
+
+  /* MODALS */
+  .modal-overlay{position:fixed;inset:0;background:#000000cc;z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .modal-overlay.open{opacity:1;pointer-events:all}
+  .modal{background:#0f0f0f;border-radius:28px 28px 0 0;padding:28px 20px 40px;width:100%;max-width:480px;border:1px solid #1e1e1e;border-bottom:none;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);position:relative}
+  .modal-overlay.open .modal{transform:translateY(0)}
+  .modal-handle{width:40px;height:4px;background:#2a2a2a;border-radius:4px;margin:0 auto 22px}
+  .modal-title{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;text-align:center;margin-bottom:6px}
+  .modal-sub{color:#555;font-size:12px;text-align:center;letter-spacing:2px;margin-bottom:20px}
+  .pay-row{display:flex;align-items:center;gap:14px;background:#161616;border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid #1e1e1e;cursor:pointer;transition:border-color 0.2s}
+  .pay-row:active{border-color:#00d2ff}
+  .pay-icon{font-size:28px}
+  .pay-info{flex:1}
+  .pay-name{font-size:15px;font-weight:700;letter-spacing:1px}
+  .pay-detail{color:#555;font-size:12px;margin-top:2px}
+  .pay-arrow{color:#333;font-size:18px}
+  .close-modal{position:absolute;top:20px;right:20px;background:#1a1a1a;border:none;color:#666;font-size:18px;width:34px;height:34px;border-radius:50%;cursor:pointer}
+
+  /* POPUP MODAL */
+  .popup-overlay{position:fixed;inset:0;background:#000000dd;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .popup-overlay.open{opacity:1;pointer-events:all}
+  .popup-box{background:linear-gradient(135deg,#0d1424,#111c35);border:1px solid #00d2ff33;border-radius:24px;padding:32px 24px;width:100%;max-width:360px;text-align:center;transform:scale(0.9);transition:transform 0.3s}
+  .popup-overlay.open .popup-box{transform:scale(1)}
+  .popup-icon{font-size:48px;margin-bottom:12px}
+  .popup-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:3px;color:#ffd700;margin-bottom:10px;line-height:1.2}
+  .popup-msg{color:#8892a4;font-size:14px;line-height:1.7;margin-bottom:20px}
+  .popup-cta{display:block;background:linear-gradient(135deg,#ffd700,#ff9500);color:#000;padding:14px 24px;border-radius:12px;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;text-decoration:none;margin-bottom:10px;cursor:pointer;border:none;width:100%}
+  .popup-dismiss{color:#556;font-size:13px;cursor:pointer;letter-spacing:1px;padding:8px}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loadScreen">
+  <div class="load-logo">PREMIUM<span>HUB</span></div>
+  <div class="load-spinner"></div>
+  <div class="load-text" id="loadText">LOADING…</div>
+</div>
+
+<!-- TICKER (shown when admin enables it) -->
+<div class="ticker-wrap" id="tickerWrap">
+  <div class="ticker-inner"><span class="ticker-text" id="tickerText">🔥 UPDATES DAILY</span></div>
+</div>
+
+<div class="topbar">
+  <div class="logo" id="siteLogo">PREMIUM<span>HUB</span></div>
+  <div class="live-pill" id="livePill"><div class="live-dot"></div><div class="live-text">LIVE</div></div>
+</div>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="wallet" id="walletBox">
+    <div><div class="wallet-label">WALLET BALANCE</div><div class="wallet-amt" id="walletAmt">₹10.00</div></div>
+    <div class="vip">✦ VIP</div>
+  </div>
+
+  <div class="membership-banner" id="membershipBanner">
+    <div class="mb-top">
+      <div class="mb-icon">🏆</div>
+      <div class="mb-info">
+        <div class="mb-title">MEMBERSHIP ACTIVE</div>
+        <div class="mb-sub">✓ PAYMENT APPROVED · ACCESS GRANTED</div>
+      </div>
+    </div>
+    <div class="mb-details">
+      <div class="mb-row"><span class="mb-row-key">PRODUCT</span><span class="mb-row-val" id="mb-product">—</span></div>
+      <div class="mb-row"><span class="mb-row-key">ACCESS TYPE</span><span class="mb-row-val" id="mb-access">—</span></div>
+      <div class="mb-row"><span class="mb-row-key">STATUS</span><span class="mb-row-val">✓ ACTIVE</span></div>
+    </div>
+    <a id="mb-link-btn" class="mb-link-btn" href="#" target="_blank">🔗 OPEN GROUP / CHANNEL</a>
+  </div>
+
+  <div class="pending-banner" id="pendingBanner">
+    <div class="pb-icon">⏳</div>
+    <div>
+      <div class="pb-title">PAYMENT UNDER REVIEW</div>
+      <div class="pb-sub">ADMIN WILL APPROVE WITHIN 1 HOUR</div>
+    </div>
+  </div>
+
+  <div class="big-pack" id="bigPack" onclick="document.getElementById('bigPackModal').classList.add('open')">ALL-IN-ONE BIG PACK ACCESS ₹199</div>
+  <div id="productsContainer"></div>
+</div>
+
+<!-- REVIEWS -->
+<div class="page" id="page-reviews">
+  <div class="sec-head"><div class="bar"></div><h2>User Reviews</h2></div>
+  <div id="reviewsList"></div>
+</div>
+
+<!-- PROFILE -->
+<div class="page" id="page-profile">
+  <div class="sec-head"><div class="bar"></div><h2>My Profile</h2></div>
+  <div class="profile-hero">
+    <div class="anon-icon">🕵️</div>
+    <div class="anon-name" id="anonName">ANONYMOUS_50316</div>
+  </div>
+  <div class="profile-status" id="profileStatusCard"></div>
+</div>
+
+<!-- SUPPORT -->
+<div class="page" id="page-support">
+  <div class="sec-head"><div class="bar"></div><h2>Support</h2></div>
+  <div class="support-hero">
+    <div class="support-icon">🛡️</div>
+    <div class="support-title">24/7 SUPPORT</div>
+    <p class="support-desc">Need help with your order? Our support team responds instantly. Everything is 100% confidential.</p>
+    <div id="contactButtons"></div>
+    <div class="support-note">⚡ AVERAGE RESPONSE TIME: UNDER 5 MINUTES</div>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="nav-item active" id="nav-home" onclick="switchPage('home')"><div class="icon">🏠</div><div class="label">HOME</div></div>
+  <div class="nav-item" id="nav-reviews" onclick="switchPage('reviews')"><div class="icon">💬</div><div class="label">REVIEWS</div></div>
+  <div class="nav-item" id="nav-profile" onclick="switchPage('profile')"><div class="icon">👤</div><div class="label">PROFILE</div></div>
+  <div class="nav-item" id="nav-support" onclick="switchPage('support')"><div class="icon">✈️</div><div class="label">SUPPORT</div></div>
+</nav>
+
+<!-- BIG PACK MODAL -->
+<div class="modal-overlay" id="bigPackModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="close-modal" onclick="document.getElementById('bigPackModal').classList.remove('open')">✕</button>
+    <div class="modal-handle"></div>
+    <div class="modal-title">BIG PACK ACCESS</div>
+    <div class="modal-sub">ALL COLLECTIONS · INSTANT LIFETIME</div>
+    <div id="bigPackPayOptions"></div>
+  </div>
+</div>
+
+<!-- BUY MODAL -->
+<div class="modal-overlay" id="buyModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="close-modal" onclick="document.getElementById('buyModal').classList.remove('open')">✕</button>
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="buyModalTitle">CHOOSE PAYMENT</div>
+    <div class="modal-sub" id="buyModalSub">SELECT METHOD BELOW</div>
+    <div id="buyPayOptions"></div>
+  </div>
+</div>
+
+<!-- POPUP MODAL -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box">
+    <div class="popup-icon">🔥</div>
+    <div class="popup-title" id="popupTitle">SPECIAL OFFER</div>
+    <div class="popup-msg" id="popupMsg">Limited time offer!</div>
+    <a class="popup-cta" id="popupCta" href="#" target="_blank">CLAIM NOW</a>
+    <div class="popup-dismiss" onclick="closePopup()">✕ Dismiss</div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════════════════════════
+const JSONBIN_BASE='https://api.jsonbin.io/v3';
+const CFG_CACHE_KEY='cachedAdminConfig';
+const CFG_REQUESTS_KEY='paymentRequests';
+const CFG_MEMBERS_KEY='approvedMembers';
+const SERVER_CFG_KEY='serverCfg'; // Same key admin.html uses
+
+// ══════════════════════════════════════════════════════════
+// LOAD CONFIG — tries server first, falls back to localStorage
+// ══════════════════════════════════════════════════════════
+let cfg = {};
+let serverRequests = [];
+let serverMembers = [];
+
+function getServerCfg(){
+  try{ return JSON.parse(localStorage.getItem(SERVER_CFG_KEY)||'{}'); }catch(e){ return {}; }
+}
+
+function isServerConnected(){
+  const sc=getServerCfg();
+  return !!(sc.apiKey && sc.binId);
+}
+
+async function loadFromServer(){
+  const sc=getServerCfg();
+  if(!sc.apiKey||!sc.binId) return null;
+  try{
+    document.getElementById('loadText').textContent='SYNCING WITH SERVER…';
+    const r=await fetch(`${JSONBIN_BASE}/b/${sc.binId}/latest`,{
+      headers:{'X-Master-Key':sc.apiKey,'X-Bin-Meta':'false'}
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    return data;
+  }catch(e){
+    console.warn('Server fetch failed:',e.message);
+    return null;
+  }
+}
+
+async function bootApp(){
+  document.getElementById('loadText').textContent='LOADING…';
+
+  if(isServerConnected()){
+    const serverData=await loadFromServer();
+    if(serverData){
+      // Update local caches from server
+      if(serverData.config){
+        cfg=serverData.config;
+        localStorage.setItem('adminConfig',JSON.stringify(cfg));
+      }
+      if(serverData.requests){
+        serverRequests=serverData.requests;
+        localStorage.setItem(CFG_REQUESTS_KEY,JSON.stringify(serverData.requests));
+      }
+      if(serverData.members){
+        serverMembers=serverData.members;
+        localStorage.setItem(CFG_MEMBERS_KEY,JSON.stringify(serverData.members));
+      }
+    } else {
+      // Server failed — use local cache
+      loadLocalConfig();
+    }
+  } else {
+    // No server — use local config (set by admin on same phone)
+    loadLocalConfig();
+  }
+
+  buildUI();
+  hideLoader();
+
+  // Auto-refresh from server every 30s to pick up admin changes
+  if(isServerConnected()) setInterval(silentRefresh, 30000);
+}
+
+function loadLocalConfig(){
+  try{ cfg=JSON.parse(localStorage.getItem('adminConfig')||'{}'); }catch(e){ cfg={}; }
+  try{ serverRequests=JSON.parse(localStorage.getItem(CFG_REQUESTS_KEY)||'[]'); }catch(e){ serverRequests=[]; }
+  try{ serverMembers=JSON.parse(localStorage.getItem(CFG_MEMBERS_KEY)||'[]'); }catch(e){ serverMembers=[]; }
+}
+
+async function silentRefresh(){
+  const serverData=await loadFromServer();
+  if(!serverData) return;
+  if(serverData.config){ cfg=serverData.config; localStorage.setItem('adminConfig',JSON.stringify(cfg)); }
+  if(serverData.requests){ serverRequests=serverData.requests; localStorage.setItem(CFG_REQUESTS_KEY,JSON.stringify(serverData.requests)); }
+  if(serverData.members){ serverMembers=serverData.members; localStorage.setItem(CFG_MEMBERS_KEY,JSON.stringify(serverData.members)); }
+  // Refresh membership UI silently (in case admin approved while user was on page)
+  renderMembershipUI();
+}
+
+function hideLoader(){
+  const ls=document.getElementById('loadScreen');
+  ls.classList.add('gone');
+  setTimeout(()=>ls.style.display='none',600);
+}
+
+// ══════════════════════════════════════════════════════════
+// BUILD UI FROM CONFIG
+// ══════════════════════════════════════════════════════════
+function buildUI(){
+  // Site name
+  if(cfg.siteName){
+    const n=cfg.siteName;
+    const mid=Math.floor(n.length/2);
+    document.getElementById('siteLogo').innerHTML=n.substring(0,mid)+'<span>'+n.substring(mid)+'</span>';
+    document.title=n;
+  }
+
+  // Live pill toggle
+  if(cfg.togLive===false) document.getElementById('livePill').style.display='none';
+
+  // Ticker
+  if(cfg.tickerEnabled && cfg.tickerMsg){
+    document.getElementById('tickerText').textContent=cfg.tickerMsg;
+    document.getElementById('tickerWrap').classList.add('show');
+  }
+
+  // Wallet
+  if(cfg.togWallet===false){
+    document.getElementById('walletBox').style.display='none';
+  } else {
+    const bal=cfg.walletAmt||'10';
+    document.getElementById('walletAmt').textContent='₹'+parseFloat(bal).toFixed(2);
+  }
+
+  // Big pack
+  if(cfg.togBigPack===false){
+    document.getElementById('bigPack').style.display='none';
+  } else {
+    document.getElementById('bigPack').textContent=`${cfg.bigPackText||'ALL-IN-ONE BIG PACK ACCESS'} ₹${cfg.bigPackPrice||199}`;
+    document.getElementById('bigPack').insertAdjacentHTML('beforeend','<span style="position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:22px">🔥</span>');
+  }
+
+  // Anonymous ID
+  const aid=sessionStorage.getItem('anonId')||(Math.floor(10000+Math.random()*90000));
+  sessionStorage.setItem('anonId',aid);
+  document.getElementById('anonName').textContent='ANONYMOUS_'+aid;
+
+  // Build sections
+  buildProducts();
+  buildPayOptions_bigPack();
+  buildReviews();
+  buildContacts();
+  renderMembershipUI();
+
+  // Popup (show once per session)
+  if(cfg.popupEnabled && cfg.popupTitle && !sessionStorage.getItem('popupShown')){
+    setTimeout(showPopup, 1500);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// POPUP
+// ══════════════════════════════════════════════════════════
+function showPopup(){
+  document.getElementById('popupTitle').textContent=cfg.popupTitle||'SPECIAL OFFER';
+  document.getElementById('popupMsg').textContent=cfg.popupMsg||'';
+  const cta=document.getElementById('popupCta');
+  cta.textContent=cfg.popupBtn||'CLAIM NOW';
+  cta.href=cfg.popupLink||'#';
+  document.getElementById('popupOverlay').classList.add('open');
+  sessionStorage.setItem('popupShown','1');
+}
+function closePopup(){ document.getElementById('popupOverlay').classList.remove('open'); }
+
+// ══════════════════════════════════════════════════════════
+// MEMBERSHIP STATUS
+// ══════════════════════════════════════════════════════════
+function getMembershipStatus(){
+  // Check server-pulled requests first, then local
+  const reqs=serverRequests.length?serverRequests:JSON.parse(localStorage.getItem(CFG_REQUESTS_KEY)||'[]');
+  if(!reqs.length) return null;
+  // Use request ID stored in this browser's sessionStorage
+  const myReqId=sessionStorage.getItem('myReqId');
+  if(myReqId){
+    const found=reqs.find(r=>r.id===myReqId);
+    if(found) return found;
+  }
+  // Fallback: latest from this session
+  const sorted=reqs.slice().sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  return sorted[0]||null;
+}
+
+function renderMembershipUI(){
+  const req=getMembershipStatus();
+  const memberBanner=document.getElementById('membershipBanner');
+  const pendingBanner=document.getElementById('pendingBanner');
+  const profileCard=document.getElementById('profileStatusCard');
+  memberBanner.classList.remove('show');
+  pendingBanner.classList.remove('show');
+
+  if(!req){
+    profileCard.innerHTML=`
+      <div style="background:#111;padding:16px 18px;border-radius:18px;border:1px solid #1e1e1e;text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">🔓</div>
+        <div style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;color:#555;margin-bottom:4px">NO ACTIVE MEMBERSHIP</div>
+        <div style="color:#333;font-size:12px;letter-spacing:1px">Purchase a plan to get access</div>
+      </div>`;
+    return;
+  }
+
+  if(req.status==='approved' && req.groupLink){
+    memberBanner.classList.add('show');
+    document.getElementById('mb-product').textContent=req.order?.productName||'—';
+    document.getElementById('mb-access').textContent=req.order?.accessType||'—';
+    document.getElementById('mb-link-btn').href=req.groupLink;
+    profileCard.innerHTML=`
+      <div style="background:linear-gradient(135deg,#051a0f,#0a2818);border:1px solid #00ff8820;border-radius:18px;overflow:hidden">
+        <div class="ps-header"><div class="ps-dot active"></div><div class="ps-title" style="color:#00ff88">MEMBERSHIP ACTIVE</div></div>
+        <div class="ps-body">
+          <div class="ps-row"><span class="ps-key">Product</span><span class="ps-val" style="color:#fff">${req.order?.productName||'—'}</span></div>
+          <div class="ps-row"><span class="ps-key">Access</span><span class="ps-val" style="color:#00d2ff">${req.order?.accessType||'—'}</span></div>
+          <div class="ps-row"><span class="ps-key">Amount Paid</span><span class="ps-val" style="color:#00ff88">₹${req.order?.price||'—'}</span></div>
+          <div class="ps-row"><span class="ps-key">Status</span><span class="ps-val" style="color:#00ff88">✓ APPROVED</span></div>
+          <a href="${req.groupLink}" target="_blank" class="ps-link-btn">🔗 OPEN GROUP / CHANNEL</a>
+        </div>
+      </div>`;
+  } else if(req.status==='pending'){
+    pendingBanner.classList.add('show');
+    profileCard.innerHTML=`
+      <div style="background:linear-gradient(135deg,#1a1200,#261c00);border:1px solid #ffd70020;border-radius:18px;overflow:hidden">
+        <div class="ps-header"><div class="ps-dot pending"></div><div class="ps-title" style="color:#ffd700">PAYMENT PENDING</div></div>
+        <div class="ps-body">
+          <div class="ps-row"><span class="ps-key">Product</span><span class="ps-val" style="color:#fff">${req.order?.productName||'—'}</span></div>
+          <div class="ps-row"><span class="ps-key">Amount</span><span class="ps-val" style="color:#ffd700">₹${req.order?.price||'—'}</span></div>
+          <div class="ps-row"><span class="ps-key">Status</span><span class="ps-val" style="color:#ffd700">⏳ UNDER REVIEW</span></div>
+          <div class="ps-row"><span class="ps-key">Request ID</span><span class="ps-val" style="color:#888;font-family:monospace;font-size:11px">${req.id||'—'}</span></div>
+          <div style="color:#554400;font-size:12px;letter-spacing:1px;text-align:center;padding-top:4px">Admin will approve within 1 hour</div>
+        </div>
+      </div>`;
+  } else if(req.status==='rejected'){
+    profileCard.innerHTML=`
+      <div style="background:linear-gradient(135deg,#1a0005,#260008);border:1px solid #ff1e5020;border-radius:18px;overflow:hidden">
+        <div class="ps-header"><div class="ps-dot" style="background:#ff4466;box-shadow:0 0 8px #ff4466"></div><div class="ps-title" style="color:#ff4466">PAYMENT REJECTED</div></div>
+        <div class="ps-body">
+          <div style="color:#663333;font-size:12px;letter-spacing:1px;text-align:center">Your payment was not verified. Please contact support or try again.</div>
+        </div>
+      </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// PAYMENT OPTIONS
+// ══════════════════════════════════════════════════════════
+function buildPayOptionHTML(price, onChooseFn){
+  const upi=cfg.upiId||'';
+  const paytm=cfg.paytmNum||'';
+  const phonepe=cfg.phonePeNum||'';
+  const gpay=cfg.gpayNum||'';
+  let html='';
+  if(upi) html+=`<div class="pay-row" onclick="${onChooseFn}('upi','${upi}',${price})"><div class="pay-icon">💳</div><div class="pay-info"><div class="pay-name">UPI PAYMENT</div><div class="pay-detail">${upi}</div></div><div class="pay-arrow">›</div></div>`;
+  if(paytm) html+=`<div class="pay-row" onclick="${onChooseFn}('paytm','${paytm}',${price})"><div class="pay-icon">🔵</div><div class="pay-info"><div class="pay-name">PAYTM</div><div class="pay-detail">${paytm}</div></div><div class="pay-arrow">›</div></div>`;
+  if(phonepe) html+=`<div class="pay-row" onclick="${onChooseFn}('phonepe','${phonepe}',${price})"><div class="pay-icon">🟣</div><div class="pay-info"><div class="pay-name">PHONEPE</div><div class="pay-detail">${phonepe}</div></div><div class="pay-arrow">›</div></div>`;
+  if(gpay) html+=`<div class="pay-row" onclick="${onChooseFn}('gpay','${gpay}',${price})"><div class="pay-icon">🟢</div><div class="pay-info"><div class="pay-name">GOOGLE PAY</div><div class="pay-detail">${gpay}</div></div><div class="pay-arrow">›</div></div>`;
+  if(!html) html='<p style="color:#555;font-size:13px;text-align:center;padding:20px">No payment methods configured yet.</p>';
+  return html;
+}
+
+function buildPayOptions_bigPack(){
+  document.getElementById('bigPackPayOptions').innerHTML=buildPayOptionHTML(cfg.bigPackPrice||199,'chooseBigPack');
+}
+
+function chooseBigPack(method,detail,price){
+  const order={productName:'BIG PACK',accessType:'Instant Lifetime',price,payMethod:method};
+  sessionStorage.setItem('pendingOrder',JSON.stringify(order));
+  document.getElementById('bigPackModal').classList.remove('open');
+  window.location.href='confirm.html';
+}
+
+// ══════════════════════════════════════════════════════════
+// PRODUCTS
+// ══════════════════════════════════════════════════════════
+const products=()=>cfg.products||[{name:"INDIAN COLLECTION",videoCount:"5000+",halfPrice:99,fullPrice:199,tag:"4K UHD",imageData:''}];
+let pendingBuyIdx=0, pendingBuyType='half';
+
+function buildProducts(){
+  const container=document.getElementById('productsContainer');
+  container.innerHTML='';
+  products().forEach((p,idx)=>{
+    const card=document.createElement('div'); card.className='product-card';
+    const hasImg=p.imageData&&p.imageData.length>10;
+    const imgContent=hasImg
+      ?`<img src="${p.imageData}" alt="${p.name}"><div class="prod-img-overlay"></div>`
+      :`<span style="font-size:90px;filter:drop-shadow(0 0 30px #ff1e5044)">${p.emoji||'🔥'}</span>`;
+    card.innerHTML=`
+      <div class="prod-img">${imgContent}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="tags">
+        <span class="tag cyan">${p.tag||'4K UHD'}</span>
+        <span class="tag green">${p.videoCount||'5000+'} VIDEOS</span>
+        <span class="tag red">DAILY UPDATES</span>
+      </div>
+      <div class="btns">
+        <button class="btn btn-dark" onclick="openTg()">▶ WATCH DEMO</button>
+        <button class="btn btn-outline" onclick="openTg()">📸 VIEW PROOFS</button>
+        <button class="btn btn-half" onclick="openBuy(${idx},'half')">HALF PACK · ₹${p.halfPrice||99}</button>
+        <button class="btn btn-full" onclick="openBuy(${idx},'full')">FULL ACCESS · ₹${p.fullPrice||199}</button>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function openTg(){
+  const tgContact=(cfg.contacts||[]).find(c=>c.style==='tg');
+  window.open(tgContact?tgContact.url:'https://t.me/','_blank');
+}
+
+function openBuy(idx,type){
+  pendingBuyIdx=idx; pendingBuyType=type;
+  const p=products()[idx];
+  const price=type==='half'?(p.halfPrice||99):(p.fullPrice||199);
+  document.getElementById('buyModalTitle').textContent=p.name;
+  document.getElementById('buyModalSub').textContent=(type==='half'?'HALF PACK':'FULL ACCESS')+' · ₹'+price;
+  document.getElementById('buyPayOptions').innerHTML=buildPayOptionHTML(price,'choosePay');
+  document.getElementById('buyModal').classList.add('open');
+}
+
+function choosePay(method,detail,price){
+  const p=products()[pendingBuyIdx];
+  const order={productName:p.name,accessType:pendingBuyType==='half'?'Half Pack':'Instant Lifetime',price,payMethod:method,videoCount:p.videoCount,videoQuality:p.tag};
+  sessionStorage.setItem('pendingOrder',JSON.stringify(order));
+  document.getElementById('buyModal').classList.remove('open');
+  window.location.href='confirm.html';
+}
+
+// ══════════════════════════════════════════════════════════
+// REVIEWS
+// ══════════════════════════════════════════════════════════
+function buildReviews(){
+  if(cfg.togReviews===false){
+    document.getElementById('nav-reviews').style.display='none';
+    return;
+  }
+  const reviews=[
+    {name:"Ravi",i:"RA",c:"#e53935",t:"Admin is very supportive, instant access. Got content in seconds!",badge:"VERIFIED"},
+    {name:"Sneha",i:"SN",c:"#e91e8c",t:"Daily updates are real, love it. 100% genuine Indian content 🔥",badge:"VERIFIED"},
+    {name:"Amit",i:"AM",c:"#3f51b5",t:"Highly recommend to everyone! Admin is very supportive.",badge:"MEMBER"},
+    {name:"Karan",i:"KA",c:"#5e35b1",t:"Safe and secure, used Paytm. Got access in 5 minutes. Trusted!",badge:"VERIFIED"},
+    {name:"Neha",i:"NE",c:"#1565c0",t:"Content is fire 🔥 Best on internet. Safe and secure.",badge:"VIP"},
+    {name:"Rahul",i:"RK",c:"#00838f",t:"Best collection online. Admin replies instantly. Legit!",badge:"VERIFIED"},
+    {name:"Priya",i:"PR",c:"#c62828",t:"4K quality is amazing. Worth every rupee. Very trusted!",badge:"MEMBER"},
+    {name:"Vikas",i:"VK",c:"#2e7d32",t:"Been a member for 3 months. New videos added daily. Superb!",badge:"VIP"},
+  ];
+  const rl=document.getElementById('reviewsList');
+  reviews.forEach(r=>{
+    const d=document.createElement('div'); d.className='review-card';
+    d.innerHTML=`<div class="avatar" style="background:${r.c}">${r.i}</div>
+      <div style="flex:1">
+        <div class="rev-top"><span class="rev-name">${r.name}</span><span class="stars">★★★★★</span></div>
+        <div class="rev-text">${r.t}</div>
+        <div class="rev-badge">${r.badge}</div>
+      </div>`;
+    rl.appendChild(d);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// CONTACTS
+// ══════════════════════════════════════════════════════════
+function buildContacts(){
+  const contacts=cfg.contacts||[
+    {label:'Message on Telegram',icon:'✈️',url:'https://t.me/sxbot',style:'tg'},
+    {label:'Email Support',icon:'✉️',url:'mailto:support@example.com',style:'email'}
+  ];
+  const styleMap={tg:'btn-tg',email:'btn-email',whatsapp:'btn-whatsapp',yellow:'btn-yellow'};
+  const cb=document.getElementById('contactButtons');
+  cb.innerHTML='';
+  contacts.forEach(c=>{
+    const btn=document.createElement('a');
+    btn.href=c.url||'#'; btn.target='_blank'; btn.rel='noopener';
+    btn.className=`support-btn ${styleMap[c.style]||'btn-tg'}`;
+    btn.innerHTML=`${c.icon||'💬'} &nbsp;${c.label||'Contact'}`;
+    cb.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════════
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  window.scrollTo(0,0);
+  if(name==='profile') renderMembershipUI();
+}
+
+// ══════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════
+bootApp();
+</script>
+</body>
+</html>

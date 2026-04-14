@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#070b14;color:#fff;font-family:'Rajdhani',sans-serif;min-height:100vh}
+
+  /* ── LOCK ── */
+  #lockScreen{position:fixed;inset:0;background:#070b14;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:30px}
+  .lock-logo{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:4px;color:#00d2ff;text-align:center}
+  .lock-logo span{color:#ff1e50}
+  .lock-subtitle{color:#556;font-size:13px;letter-spacing:3px;text-align:center;margin-top:-16px}
+  .lock-box{background:#0d1424;border:1px solid #1a2540;border-radius:16px;padding:28px 24px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px}
+  .lock-icon{font-size:40px;text-align:center}
+  .lock-label{color:#8892a4;font-size:12px;letter-spacing:2px;text-align:center}
+  .lock-input{background:#111c35;border:1px solid #1a2540;border-radius:10px;padding:14px 16px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:16px;outline:none;width:100%;letter-spacing:2px;transition:border 0.2s;text-align:center}
+  .lock-input:focus{border-color:#00d2ff}
+  .lock-btn{background:linear-gradient(135deg,#00d2ff,#0099cc);color:#000;border:none;padding:14px;border-radius:10px;font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:3px;cursor:pointer;width:100%}
+  .lock-err{color:#ff1e50;font-size:13px;text-align:center;letter-spacing:1px;display:none}
+
+  /* ── PANEL ── */
+  #adminPanel{display:none}
+  .header{background:linear-gradient(135deg,#0d1424,#111c35);padding:16px 20px;border-bottom:1px solid #1a2540;display:flex;align-items:center;justify-content:space-between}
+  .header h1{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;color:#00d2ff}
+  .header-right{display:flex;align-items:center;gap:10px}
+  .badge{background:#ff1e50;color:#fff;font-size:10px;padding:3px 10px;border-radius:20px;letter-spacing:2px;font-weight:700}
+  .badge.green{background:#00ff88;color:#000}
+  .badge.yellow{background:#ffd700;color:#000}
+  .logout-btn{background:#1a2540;border:1px solid #2a3550;color:#8892a4;font-size:11px;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:1px}
+  .logout-btn:hover{color:#ff1e50;border-color:#ff1e50}
+
+  /* ── SYNC BAR ── */
+  .sync-bar{background:#0a1020;border-bottom:1px solid #1a2540;padding:8px 20px;display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:1px}
+  .sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .sync-dot.ok{background:#00ff88;box-shadow:0 0 6px #00ff88}
+  .sync-dot.syncing{background:#ffd700;box-shadow:0 0 6px #ffd700;animation:blink 0.6s infinite}
+  .sync-dot.err{background:#ff1e50;box-shadow:0 0 6px #ff1e50}
+  .sync-dot.off{background:#333}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+  .sync-text{color:#8892a4;flex:1;font-size:11px}
+  .sync-mode{font-size:10px;color:#444;letter-spacing:2px}
+
+  /* ── TABS ── */
+  .nav-tabs{display:flex;background:#0d1424;border-bottom:1px solid #1a2540;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .nav-tabs::-webkit-scrollbar{display:none}
+  .tab{padding:12px 14px;font-size:11px;font-weight:600;letter-spacing:1px;color:#556;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s}
+  .tab.active{color:#00d2ff;border-bottom-color:#00d2ff}
+  .tab:hover:not(.active){color:#aaa}
+
+  /* ── PAGES ── */
+  .page{display:none;padding:16px}.page.active{display:block}
+  .section{background:#0d1424;border-radius:14px;padding:18px;margin-bottom:14px;border:1px solid #1a2540}
+  .section-title{color:#00d2ff;font-size:11px;letter-spacing:3px;margin-bottom:16px;font-weight:700}
+  label{display:block;color:#8892a4;font-size:11px;letter-spacing:1px;margin-bottom:5px;margin-top:12px}
+  input,textarea,select{width:100%;background:#111c35;border:1px solid #1a2540;border-radius:8px;padding:10px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;transition:border 0.2s}
+  input:focus,textarea:focus,select:focus{border-color:#00d2ff}
+  textarea{min-height:80px;resize:vertical}
+  select option{background:#111c35}
+
+  /* ── BUTTONS ── */
+  .save-btn{background:linear-gradient(135deg,#00d2ff,#0099cc);color:#000;border:none;padding:12px 28px;border-radius:10px;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;cursor:pointer;margin-top:16px;width:100%;transition:opacity 0.2s}
+  .save-btn:hover{opacity:0.88}
+  .save-btn:disabled{opacity:0.4;cursor:not-allowed}
+  .save-btn.red{background:linear-gradient(135deg,#ff1e50,#cc0033);color:#fff}
+  .save-btn.green{background:linear-gradient(135deg,#00ff88,#00cc66);color:#000}
+  .save-btn.grey{background:linear-gradient(135deg,#3a3a3a,#2a2a2a);color:#aaa}
+  .add-btn{background:#111c35;border:1px dashed #2a3550;color:#00d2ff;padding:11px;border-radius:10px;width:100%;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer;margin-top:10px}
+  .add-btn:hover{background:#1a2540}
+
+  /* ── PRODUCTS ── */
+  .product-item{background:#070b14;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #1a2540;position:relative}
+  .del-btn{position:absolute;top:10px;right:10px;background:#ff1e50;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  /* ── IMAGE UPLOAD ── */
+  .img-upload-area{border:2px dashed #2a3550;border-radius:10px;padding:18px;text-align:center;cursor:pointer;position:relative;background:#070b14;margin-top:8px}
+  .img-upload-area:hover{border-color:#00d2ff}
+  .img-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .upload-icon{font-size:26px;margin-bottom:4px}
+  .upload-text{color:#556;font-size:11px;letter-spacing:1px}
+  .img-preview{width:100%;height:130px;object-fit:cover;border-radius:8px;margin-top:8px;display:none}
+  .img-preview.show{display:block}
+
+  /* ── CONTACTS ── */
+  .contact-row{background:#070b14;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #1a2540}
+  .contact-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .contact-type-badge{font-size:11px;color:#00d2ff;letter-spacing:1px;font-weight:700}
+
+  /* ── REQUESTS ── */
+  .request-card{background:#070b14;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #1a2540}
+  .req-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .req-id{color:#00d2ff;font-size:11px;font-family:monospace;word-break:break-all}
+  .req-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;letter-spacing:1px;flex-shrink:0}
+  .status-pending{background:#2a1a00;color:#ffd700}
+  .status-approved{background:#002a14;color:#00ff88}
+  .status-rejected{background:#2a0008;color:#ff4466}
+  .req-detail{color:#8892a4;font-size:12px;line-height:2}
+  .req-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .approve-btn{background:linear-gradient(135deg,#00ff88,#00cc66);color:#000;border:none;padding:8px 18px;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px}
+  .reject-btn{background:#1a0a0a;border:1px solid #3a1010;color:#ff4466;padding:8px 14px;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px}
+  .group-link-sent{background:#001a0d;border:1px solid #003322;border-radius:8px;padding:8px 12px;margin-top:8px;font-size:11px;color:#00ff88;letter-spacing:1px;word-break:break-all}
+
+  /* ── FILTER BUTTONS ── */
+  .filter-btn{background:#1a2540;color:#8892a4;border:1px solid #2a3550;padding:6px 14px;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px}
+  .filter-btn.active-filter{border-color:#00d2ff;color:#00d2ff}
+
+  /* ── MEMBERS ── */
+  .member-card{background:#070b14;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #1a2540}
+  .member-badge-pill{display:inline-block;background:#002a14;color:#00ff88;font-size:10px;padding:3px 10px;border-radius:20px;font-weight:700;letter-spacing:1px;margin-bottom:6px}
+  .member-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+  .member-detail{color:#556;font-size:11px;letter-spacing:1px;line-height:2}
+
+  /* ── STATS ── */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat-box{background:#0d1424;border-radius:12px;padding:16px;text-align:center;border:1px solid #1a2540}
+  .stat-num{font-size:28px;font-weight:700;color:#00ff88;font-family:'Bebas Neue',cursive}
+  .stat-label{color:#556;font-size:10px;letter-spacing:2px;margin-top:4px}
+
+  /* ── SETUP WIZARD ── */
+  .setup-wizard{background:#050810;border:1px solid #ffd70033;border-radius:14px;padding:20px;margin-bottom:16px}
+  .wizard-title{color:#ffd700;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:3px;margin-bottom:8px}
+  .wizard-desc{color:#887744;font-size:12px;line-height:1.9;margin-bottom:14px}
+  .wizard-step{background:#0a0d1a;border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid #1a2540}
+  .wizard-step-title{color:#00d2ff;font-size:11px;letter-spacing:2px;margin-bottom:8px;font-weight:700}
+  .wizard-step p{color:#8892a4;font-size:12px;line-height:1.8;margin-bottom:8px}
+  .wizard-step code{background:#111c35;color:#00ff88;padding:3px 8px;border-radius:4px;font-size:11px;word-break:break-all;display:inline-block}
+  .url-hint{color:#445;font-size:11px;margin-top:6px;padding:6px 10px;background:#0a0d1a;border-radius:6px;border:1px solid #1a2540}
+
+  /* ── NOTICE ── */
+  .notice{background:#1a1200;border:1px solid #ffd70033;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#887744;line-height:1.9}
+  .notice strong{color:#ffd700}
+
+  /* ── TOGGLES ── */
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #111c35}
+  .toggle-row:last-of-type{border-bottom:none}
+  .toggle-label{color:#8892a4;font-size:13px}
+  .toggle{position:relative;width:44px;height:24px;flex-shrink:0;display:inline-block}
+  .toggle input{opacity:0;width:0;height:0;position:absolute}
+  .toggle-slider{position:absolute;inset:0;background:#1a2540;border-radius:12px;cursor:pointer;transition:0.3s}
+  .toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:#555;border-radius:50%;transition:0.3s}
+  .toggle input:checked+.toggle-slider{background:#00d2ff22;border:1px solid #00d2ff}
+  .toggle input:checked+.toggle-slider::before{transform:translateX(20px);background:#00d2ff}
+
+  /* ── TICKER PREVIEW ── */
+  .ticker-preview{background:#111c35;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#00d2ff;border:1px solid #1a2540;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+  /* ── CONN CARD ── */
+  .conn-card{background:#070b14;border-radius:10px;padding:14px;font-size:12px;color:#8892a4;line-height:2.2;border:1px solid #1a2540}
+
+  /* ── TOAST ── */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#00ff88;color:#000;padding:10px 24px;border-radius:20px;font-weight:700;font-size:14px;letter-spacing:1px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:9998;white-space:nowrap;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  .toast.err{background:#ff1e50;color:#fff}
+
+  /* ── GL MODAL ── */
+  .gl-modal-overlay{position:fixed;inset:0;background:#000000cc;z-index:10000;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .gl-modal-overlay.open{opacity:1;pointer-events:all}
+  .gl-modal{background:#0d1424;border-radius:24px 24px 0 0;padding:28px 20px 44px;width:100%;max-width:480px;border:1px solid #1a2540;border-bottom:none;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1)}
+  .gl-modal-overlay.open .gl-modal{transform:translateY(0)}
+  .gl-handle{width:40px;height:4px;background:#1a2540;border-radius:4px;margin:0 auto 20px}
+  .gl-title{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:3px;color:#00ff88;margin-bottom:4px}
+  .gl-sub{color:#556;font-size:11px;letter-spacing:2px;margin-bottom:18px}
+  .gl-order-info{background:#070b14;border-radius:10px;padding:12px;margin-bottom:16px;border:1px solid #1a2540;font-size:12px;color:#8892a4;line-height:2}
+  .gl-input{width:100%;background:#111c35;border:1.5px solid #1a2540;border-radius:10px;padding:13px 14px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;margin-bottom:6px;transition:border 0.2s}
+  .gl-input:focus{border-color:#00ff88}
+  .gl-hint{color:#445;font-size:11px;letter-spacing:1px;margin-bottom:16px}
+  .gl-confirm-btn{width:100%;background:linear-gradient(135deg,#00ff88,#00cc66);color:#000;border:none;padding:15px;border-radius:12px;font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:3px;cursor:pointer;margin-bottom:10px}
+  .gl-cancel-btn{width:100%;background:transparent;border:1px solid #1a2540;color:#556;padding:12px;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div>
+    <div class="lock-logo">⚡ VOID<span>ADMIN</span></div>
+    <div class="lock-subtitle">RESTRICTED ACCESS</div>
+  </div>
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <div class="lock-label">ENTER ADMIN PASSWORD</div>
+    <input class="lock-input" type="password" id="pwInput" placeholder="••••••••••••"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="lock-btn" onclick="checkPw()">UNLOCK PANEL</button>
+    <div class="lock-err" id="pwErr">❌ WRONG PASSWORD. ACCESS DENIED.</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="header">
+    <h1>⚡ ADMIN PANEL</h1>
+    <div class="header-right">
+      <span class="badge" id="syncBadge">OFFLINE</span>
+      <button class="logout-btn" onclick="logout()">LOCK</button>
+    </div>
+  </div>
+
+  <div class="sync-bar">
+    <div class="sync-dot off" id="syncDot"></div>
+    <div class="sync-text" id="syncText">Not connected to server</div>
+    <div class="sync-mode" id="syncMode">NO SERVER</div>
+  </div>
+
+  <div class="nav-tabs">
+    <div class="tab active" onclick="switchTab(this,'dashboard')">DASHBOARD</div>
+    <div class="tab" onclick="switchTab(this,'setup')">🔧 SETUP</div>
+    <div class="tab" onclick="switchTab(this,'site')">SITE</div>
+    <div class="tab" onclick="switchTab(this,'products')">PRODUCTS</div>
+    <div class="tab" onclick="switchTab(this,'payment')">PAYMENT</div>
+    <div class="tab" onclick="switchTab(this,'contacts')">CONTACTS</div>
+    <div class="tab" onclick="switchTab(this,'announce')">ANNOUNCE</div>
+    <div class="tab" onclick="switchTab(this,'requests')">REQUESTS</div>
+    <div class="tab" onclick="switchTab(this,'members')">MEMBERS</div>
+    <div class="tab" onclick="switchTab(this,'settings')">SETTINGS</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="tab-dashboard">
+    <div class="stats">
+      <div class="stat-box"><div class="stat-num" id="statReq">—</div><div class="stat-label">TOTAL REQUESTS</div></div>
+      <div class="stat-box"><div class="stat-num" id="statPending">—</div><div class="stat-label">PENDING</div></div>
+      <div class="stat-box"><div class="stat-num" id="statApproved">—</div><div class="stat-label">APPROVED</div></div>
+      <div class="stat-box"><div class="stat-num" id="statRevenue">—</div><div class="stat-label">REVENUE</div></div>
+      <div class="stat-box"><div class="stat-num" id="statMembers">—</div><div class="stat-label">MEMBERS</div></div>
+      <div class="stat-box"><div class="stat-num" id="statProducts">—</div><div class="stat-label">PRODUCTS</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">QUICK ACTIONS</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="save-btn green" onclick="doPush()" style="margin-top:0">☁️ PUSH ALL DATA TO SERVER</button>
+        <button class="save-btn grey" onclick="doPull()" style="margin-top:0">⬇️ PULL LATEST FROM SERVER</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">SERVER STATUS</div>
+      <div class="conn-card" id="serverStatusInfo">Go to 🔧 SETUP tab to connect your server.</div>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="page" id="tab-setup">
+    <div class="notice">
+      <strong>HOW IT WORKS:</strong> All data is stored <strong>only on your server</strong> via <code style="color:#00ff88;background:#111c35;padding:1px 6px;border-radius:4px">save.php</code>.
+      No localStorage is used for site data — every save goes directly to your VM.
+    </div>
+    <div class="setup-wizard">
+      <div class="wizard-title">🔧 SERVER ENDPOINT CONFIG</div>
+      <div class="wizard-desc">
+        Your server needs one PHP file that handles both reading and writing:<br><br>
+        <strong style="color:#ffd700">GET /api/save.php</strong> — returns the full JSON data<br>
+        <strong style="color:#ffd700">POST /api/save.php</strong> — receives JSON and saves it
+      </div>
+
+      <div class="wizard-step">
+        <div class="wizard-step-title">STEP 1 — UPLOAD save.php TO YOUR SERVER</div>
+        <p>Upload <code>save.php</code> to your web root, e.g.:</p>
+        <code>/var/www/html/api/save.php</code>
+      </div>
+
+      <div class="wizard-step">
+        <div class="wizard-step-title">STEP 2 — ENTER YOUR SERVER URL</div>
+        <p>Base URL — no trailing slash.</p>
+        <input type="url" id="setupServerUrl" placeholder="https://yourdomain.com" autocomplete="off" spellcheck="false"
+          oninput="document.getElementById('urlPreview').textContent=(this.value.trim().replace(/\/+$/,'')||'https://yourdomain.com')+'/api/save.php'">
+        <div class="url-hint">Endpoint: <strong id="urlPreview" style="color:#00d2ff">https://yourdomain.com/api/save.php</strong></div>
+      </div>
+
+      <div class="wizard-step">
+        <div class="wizard-step-title">STEP 3 — WRITE PASSWORD</div>
+        <p>The secret password set inside <code>save.php</code> to authorise write requests.</p>
+        <input type="password" id="setupWritePass" placeholder="your_secret_write_password" autocomplete="new-password">
+      </div>
+
+      <div class="wizard-step">
+        <div class="wizard-step-title">STEP 4 — SAVE &amp; TEST</div>
+        <button class="save-btn green" onclick="saveServerConfig()" style="margin-top:8px">✓ SAVE &amp; TEST CONNECTION</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">CURRENT CONFIG</div>
+      <div class="conn-card" id="currentServerConfig">Not configured.</div>
+      <button class="save-btn red" onclick="disconnectServer()" style="margin-top:14px">DISCONNECT SERVER</button>
+    </div>
+  </div>
+
+  <!-- SITE -->
+  <div class="page" id="tab-site">
+    <div class="section">
+      <div class="section-title">SITE SETTINGS</div>
+      <label>Site Name / Title</label>
+      <input type="text" id="siteName" placeholder="PREMIUMHUB">
+      <label>Big Pack Banner Text</label>
+      <input type="text" id="bigPackText" placeholder="ALL-IN-ONE BIG PACK ACCESS ₹199">
+      <label>Big Pack Price (₹)</label>
+      <input type="number" id="bigPackPrice" placeholder="199">
+      <label>Wallet Balance (₹) shown to users</label>
+      <input type="number" id="walletAmt" placeholder="10">
+      <button class="save-btn" onclick="saveSite()">SAVE &amp; PUSH</button>
+    </div>
+    <div class="section">
+      <div class="section-title">SITE TOGGLES</div>
+      <div class="toggle-row"><span class="toggle-label">Show "LIVE" badge</span><label class="toggle"><input type="checkbox" id="togLive" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><span class="toggle-label">Show wallet balance</span><label class="toggle"><input type="checkbox" id="togWallet" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><span class="toggle-label">Show Big Pack banner</span><label class="toggle"><input type="checkbox" id="togBigPack" checked><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><span class="toggle-label">Show review section</span><label class="toggle"><input type="checkbox" id="togReviews" checked><span class="toggle-slider"></span></label></div>
+      <button class="save-btn" onclick="saveToggles()">SAVE TOGGLES</button>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="page" id="tab-products">
+    <div class="section">
+      <div class="section-title">MANAGE PRODUCTS</div>
+      <div id="productsList"></div>
+      <button class="add-btn" onclick="addProduct()">+ ADD NEW PRODUCT</button>
+      <button class="save-btn" onclick="saveProducts()">SAVE &amp; PUSH PRODUCTS</button>
+    </div>
+  </div>
+
+  <!-- PAYMENT -->
+  <div class="page" id="tab-payment">
+    <div class="section">
+      <div class="section-title">PAYMENT SETTINGS</div>
+      <label>UPI ID</label><input type="text" id="upiId" placeholder="yourname@upi">
+      <label>QR Code Image</label>
+      <div class="img-upload-area">
+        <input type="file" accept="image/*" onchange="handleQrUpload(event)">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text" id="qrUploadText">TAP TO UPLOAD QR CODE</div>
+      </div>
+      <img id="qrPreview" class="img-preview" alt="QR Preview">
+      <label>Paytm Number</label><input type="text" id="paytmNum" placeholder="9999999999">
+      <label>PhonePe Number</label><input type="text" id="phonePeNum" placeholder="9999999999">
+      <label>GPay Number</label><input type="text" id="gpayNum" placeholder="9999999999">
+      <button class="save-btn" onclick="savePayment()">SAVE &amp; PUSH PAYMENT</button>
+    </div>
+    <div class="section">
+      <div class="section-title">PAYMENT PAGE MESSAGE</div>
+      <textarea id="paymentMsg" placeholder="Send screenshot to Telegram after payment for instant approval."></textarea>
+      <button class="save-btn" onclick="savePayment()">SAVE MESSAGE</button>
+    </div>
+  </div>
+
+  <!-- CONTACTS -->
+  <div class="page" id="tab-contacts">
+    <div class="section">
+      <div class="section-title">CONTACT BUTTONS</div>
+      <p style="color:#556;font-size:12px;margin-bottom:12px;letter-spacing:1px">Shown in the Support section of content.html</p>
+      <div id="contactsList"></div>
+      <button class="add-btn" onclick="addContact()">+ ADD CONTACT BUTTON</button>
+      <button class="save-btn" onclick="saveContacts()">SAVE &amp; PUSH CONTACTS</button>
+    </div>
+  </div>
+
+  <!-- ANNOUNCEMENTS -->
+  <div class="page" id="tab-announce">
+    <div class="section">
+      <div class="section-title">ANNOUNCEMENT TICKER</div>
+      <div class="toggle-row" style="padding:0 0 12px">
+        <span class="toggle-label">Show ticker to users</span>
+        <label class="toggle"><input type="checkbox" id="tickerEnabled"><span class="toggle-slider"></span></label>
+      </div>
+      <label>Ticker Message</label>
+      <input type="text" id="tickerMsg" placeholder="🔥 NEW VIDEOS ADDED DAILY · 4K QUALITY ⚡"
+        oninput="document.getElementById('tickerPreview').textContent=this.value||'Preview…'">
+      <div class="ticker-preview" id="tickerPreview">Preview will appear here…</div>
+      <button class="save-btn" onclick="saveAnnouncement()">SAVE &amp; PUSH</button>
+    </div>
+    <div class="section">
+      <div class="section-title">POPUP NOTICE</div>
+      <div class="toggle-row" style="padding:0 0 10px">
+        <span class="toggle-label">Show popup to users</span>
+        <label class="toggle"><input type="checkbox" id="popupEnabled"><span class="toggle-slider"></span></label>
+      </div>
+      <label>Popup Title</label><input type="text" id="popupTitle" placeholder="🔥 SPECIAL OFFER TODAY ONLY">
+      <label>Popup Message</label><textarea id="popupMsg" placeholder="Get 50% off on all packs today!"></textarea>
+      <label>Button Text</label><input type="text" id="popupBtn" placeholder="CLAIM OFFER NOW">
+      <label>Button Link</label><input type="url" id="popupLink" placeholder="https://t.me/yourlink">
+      <button class="save-btn" onclick="saveAnnouncement()">SAVE &amp; PUSH POPUP</button>
+    </div>
+  </div>
+
+  <!-- REQUESTS -->
+  <div class="page" id="tab-requests">
+    <div class="section">
+      <div class="section-title">PAYMENT REQUESTS</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="filter-btn active-filter" id="fAll"      onclick="filterReqs('all')">ALL</button>
+        <button class="filter-btn"               id="fPending"  onclick="filterReqs('pending')"  style="color:#ffd700">PENDING</button>
+        <button class="filter-btn"               id="fApproved" onclick="filterReqs('approved')" style="color:#00ff88">APPROVED</button>
+        <button class="filter-btn"               id="fRejected" onclick="filterReqs('rejected')" style="color:#ff4466">REJECTED</button>
+      </div>
+      <div id="requestsList"><p style="color:#556;font-size:13px">Pull data from server first.</p></div>
+    </div>
+    <button class="save-btn red" style="width:100%;margin-top:0" onclick="clearRequests()">CLEAR ALL REQUESTS</button>
+  </div>
+
+  <!-- MEMBERS -->
+  <div class="page" id="tab-members">
+    <div class="section">
+      <div class="section-title">ACTIVE MEMBERS</div>
+      <div id="membersList"><p style="color:#556;font-size:13px">Pull data from server first.</p></div>
+    </div>
+    <button class="save-btn red" style="width:100%;margin-top:0" onclick="clearMembers()">CLEAR ALL MEMBERS</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="tab-settings">
+    <div class="section">
+      <div class="section-title">CHANGE ADMIN PASSWORD</div>
+      <label>Current Password</label><input type="password" id="curPw" placeholder="Current password" autocomplete="current-password">
+      <label>New Password</label><input type="password" id="newPw" placeholder="New password (min 6 chars)" autocomplete="new-password">
+      <label>Confirm New Password</label><input type="password" id="confPw" placeholder="Confirm new password" autocomplete="new-password">
+      <button class="save-btn" onclick="changePw()">CHANGE PASSWORD</button>
+    </div>
+    <div class="section">
+      <div class="section-title">DANGER ZONE</div>
+      <p style="color:#556;font-size:12px;margin-bottom:12px">Clears the server config stored in this browser. Server data is untouched.</p>
+      <button class="save-btn red" onclick="nukeLocal()">🗑️ CLEAR LOCAL CONFIG</button>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP LINK MODAL -->
+<div class="gl-modal-overlay" id="glModal">
+  <div class="gl-modal">
+    <div class="gl-handle"></div>
+    <div class="gl-title">✓ APPROVE &amp; SEND ACCESS</div>
+    <div class="gl-sub">ENTER GROUP / CHANNEL LINK FOR THIS USER</div>
+    <div class="gl-order-info" id="glOrderInfo">Loading…</div>
+    <input class="gl-input" type="url" id="glLinkInput" placeholder="https://t.me/+xxxxxxxx">
+    <div class="gl-hint">Telegram, WhatsApp, or any invite link — shown to the user after approval.</div>
+    <button class="gl-confirm-btn" onclick="confirmApprove()">✓ APPROVE &amp; PUSH TO SERVER</button>
+    <button class="gl-cancel-btn" onclick="closeGlModal()">CANCEL</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════
+// SERVER CONFIG  — only thing stored in localStorage
+// localStorageKey: 'serverCfg'  →  {serverUrl, writePass}
+// ══════════════════════════════════════════════════════════
+function getSC(){ try{ return JSON.parse(localStorage.getItem('serverCfg')||'{}'); }catch(e){ return {}; } }
+function hasSC(){ const s=getSC(); return !!(s.serverUrl&&s.serverUrl.trim()); }
+function serverUrl(){ return getSC().serverUrl.trim().replace(/\/+$/,''); }
+
+// ══════════════════════════════════════════════════════════
+// PASSWORD  — stored in localStorage (admin config only)
+// ══════════════════════════════════════════════════════════
+function getPass(){ return localStorage.getItem('adminPass')||'VoidProject#123'; }
+
+function checkPw(){
+  const v=document.getElementById('pwInput').value;
+  const err=document.getElementById('pwErr');
+  if(v===getPass()){
+    sessionStorage.setItem('adminAuth','1');
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    init();
+  } else {
+    err.style.display='block';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+    setTimeout(()=>err.style.display='none',3000);
+  }
+}
+function logout(){ sessionStorage.removeItem('adminAuth'); location.reload(); }
+if(sessionStorage.getItem('adminAuth')==='1'){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('adminPanel').style.display='block';
+}
+
+// ══════════════════════════════════════════════════════════
+// IN-MEMORY STATE  — never written to localStorage
+// ══════════════════════════════════════════════════════════
+let cfg={};
+let allRequests=[];
+let allMembers=[];
+
+// ══════════════════════════════════════════════════════════
+// SERVER IO
+// ══════════════════════════════════════════════════════════
+async function fetchFromServer(){
+  setSyncStatus('syncing','Fetching from server…');
+  try{
+    const r=await fetch(serverUrl()+'/api/save.php',{method:'GET',cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    setSyncStatus('ok','Last synced: '+new Date().toLocaleTimeString());
+    return data;
+  }catch(e){
+    setSyncStatus('err','Fetch failed: '+e.message);
+    return null;
+  }
+}
+
+async function pushToServer(){
+  setSyncStatus('syncing','Pushing to server…');
+  const sc=getSC();
+  try{
+    const body=JSON.stringify({password:sc.writePass||'',data:{config:cfg,requests:allRequests,members:allMembers}});
+    const r=await fetch(serverUrl()+'/api/save.php',{method:'POST',headers:{'Content-Type':'application/json'},body});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const res=await r.json();
+    if(res.error) throw new Error(res.error);
+    setSyncStatus('ok','Last pushed: '+new Date().toLocaleTimeString());
+    return true;
+  }catch(e){
+    setSyncStatus('err','Push failed: '+e.message);
+    return false;
+  }
+}
+
+function applyServerData(data){
+  if(!data) return;
+  if(data.config)   cfg=data.config;
+  if(data.requests) allRequests=data.requests;
+  if(data.members)  allMembers=data.members;
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+let autoTimer=null;
+
+async function init(){
+  cfg={};allRequests=[];allMembers=[];
+  updateSetupTab();
+  updateServerStatusInfo();
+
+  if(!hasSC()){
+    setSyncStatus('off','No server configured — go to 🔧 SETUP');
+    return;
+  }
+
+  const data=await fetchFromServer();
+  if(data){
+    applyServerData(data);
+    populateFields();
+    updateStats();
+    renderRequests();
+    renderMembers();
+    if(autoTimer) clearInterval(autoTimer);
+    autoTimer=setInterval(silentPull,60000);
+  } else {
+    toast('⚠ Could not reach server — check Setup','err');
+  }
+}
+
+async function silentPull(){
+  if(!hasSC()) return;
+  const data=await fetchFromServer();
+  if(!data) return;
+  applyServerData(data);
+  populateFields();
+  updateStats();
+  renderRequests();
+  renderMembers();
+}
+
+async function doPull(){
+  if(!hasSC()){ toast('No server configured','err'); return; }
+  const data=await fetchFromServer();
+  if(!data){ toast('❌ Pull failed','err'); return; }
+  applyServerData(data);
+  populateFields();
+  updateStats();
+  renderRequests();
+  renderMembers();
+  toast('⬇️ Data pulled from server');
+}
+
+async function doPush(){
+  if(!hasSC()){ toast('No server configured','err'); return; }
+  const ok=await pushToServer();
+  toast(ok?'☁️ Pushed to server':'❌ Push failed',ok?'':'err');
+}
+
+if(sessionStorage.getItem('adminAuth')==='1') init();
+
+// ══════════════════════════════════════════════════════════
+// SETUP
+// ══════════════════════════════════════════════════════════
+function updateSetupTab(){
+  const sc=getSC();
+  const el=document.getElementById('currentServerConfig');
+  if(!el) return;
+  if(sc.serverUrl){
+    el.innerHTML=`Server: <strong style="color:#00d2ff">${esc(sc.serverUrl)}</strong><br>
+    Write Password: <strong style="color:#00ff88">${sc.writePass?'••••••••':'<span style="color:#556">Not set</span>'}</strong><br>
+    Status: <strong style="color:#00ff88">✓ CONFIGURED</strong>`;
+    document.getElementById('setupServerUrl').value=sc.serverUrl;
+  } else {
+    el.innerHTML='<span style="color:#ff4466">❌ Not configured. Fill in steps above.</span>';
+  }
+}
+
+async function saveServerConfig(){
+  const url=document.getElementById('setupServerUrl').value.trim().replace(/\/+$/,'');
+  const pass=document.getElementById('setupWritePass').value.trim();
+  if(!url){ toast('Enter server URL first','err'); return; }
+  try{ new URL(url); }catch(e){ toast('Invalid URL — include https://','err'); return; }
+  localStorage.setItem('serverCfg',JSON.stringify({serverUrl:url,writePass:pass}));
+  updateSetupTab();
+  setSyncStatus('syncing','Testing connection…');
+  const data=await fetchFromServer();
+  if(data){
+    applyServerData(data);
+    populateFields();
+    updateStats();
+    renderRequests();
+    renderMembers();
+    toast('✓ Connected to server');
+    if(autoTimer) clearInterval(autoTimer);
+    autoTimer=setInterval(silentPull,60000);
+    updateServerStatusInfo();
+  } else {
+    toast('❌ Connection failed — check URL & save.php','err');
+  }
+}
+
+function disconnectServer(){
+  if(!confirm('Disconnect from server?')) return;
+  localStorage.removeItem('serverCfg');
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; }
+  cfg={};allRequests=[];allMembers=[];
+  setSyncStatus('off','Disconnected');
+  updateSetupTab();
+  updateServerStatusInfo();
+  toast('Disconnected');
+}
+
+function updateServerStatusInfo(){
+  const sc=getSC();
+  const el=document.getElementById('serverStatusInfo');
+  if(!el) return;
+  if(sc.serverUrl){
+    el.innerHTML=`Mode: <strong style="color:#00ff88">YOUR SERVER</strong><br>
+    Endpoint: <span style="color:#00d2ff;word-break:break-all">${esc(sc.serverUrl)}/api/save.php</span><br>
+    Auto-sync: <span style="color:#00ff88">Every 60 seconds</span>`;
+  } else {
+    el.innerHTML='<span style="color:#ff4466">Not configured.</span> Go to 🔧 SETUP tab.';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// SYNC STATUS BAR
+// ══════════════════════════════════════════════════════════
+function setSyncStatus(state,msg){
+  const dot=document.getElementById('syncDot');
+  const txt=document.getElementById('syncText');
+  const mode=document.getElementById('syncMode');
+  const badge=document.getElementById('syncBadge');
+  dot.className='sync-dot '+state;
+  txt.textContent=msg;
+  if(state==='ok'){   mode.textContent='SERVER'; badge.textContent='LIVE'; badge.className='badge green'; }
+  else if(state==='syncing'){ mode.textContent='SYNCING'; badge.textContent='SYNC'; badge.className='badge yellow'; }
+  else if(state==='err'){     mode.textContent='ERROR';   badge.textContent='ERROR'; badge.className='badge'; }
+  else{                       mode.textContent='NO SERVER'; badge.textContent='OFFLINE'; badge.className='badge'; }
+}
+
+// ══════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════
+function switchTab(el,t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+  if(t==='requests') renderRequests();
+  if(t==='members')  renderMembers();
+  if(t==='dashboard'){ updateStats(); updateServerStatusInfo(); }
+  if(t==='setup') updateSetupTab();
+}
+
+// ══════════════════════════════════════════════════════════
+// POPULATE FIELDS FROM IN-MEMORY cfg
+// ══════════════════════════════════════════════════════════
+function populateFields(){
+  cfg.products=cfg.products||[{name:'INDIAN COLLECTION',videoCount:'5000+',halfPrice:99,fullPrice:199,tag:'4K UHD',imageData:'',emoji:'🔥'}];
+  cfg.contacts=cfg.contacts||[];
+
+  const sv=(id,v)=>{ const e=document.getElementById(id); if(e) e.value=v||''; };
+  const sc=(id,v)=>{ const e=document.getElementById(id); if(e) e.checked=!!v; };
+
+  sv('siteName',   cfg.siteName);
+  sv('bigPackText',cfg.bigPackText);
+  sv('bigPackPrice',cfg.bigPackPrice);
+  sv('walletAmt',  cfg.walletAmt||'10');
+  sv('upiId',      cfg.upiId);
+  sv('paytmNum',   cfg.paytmNum);
+  sv('phonePeNum', cfg.phonePeNum);
+  sv('gpayNum',    cfg.gpayNum);
+  sv('paymentMsg', cfg.paymentMsg);
+  sv('tickerMsg',  cfg.tickerMsg);
+  sv('popupTitle', cfg.popupTitle);
+  sv('popupMsg',   cfg.popupMsg);
+  sv('popupBtn',   cfg.popupBtn);
+  sv('popupLink',  cfg.popupLink);
+
+  sc('tickerEnabled',cfg.tickerEnabled);
+  sc('popupEnabled', cfg.popupEnabled);
+  sc('togLive',    cfg.togLive!==false);
+  sc('togWallet',  cfg.togWallet!==false);
+  sc('togBigPack', cfg.togBigPack!==false);
+  sc('togReviews', cfg.togReviews!==false);
+
+  const tp=document.getElementById('tickerPreview');
+  if(tp) tp.textContent=cfg.tickerMsg||'Preview will appear here…';
+
+  if(cfg.qrImageData){
+    const p=document.getElementById('qrPreview');
+    if(p){ p.src=cfg.qrImageData; p.classList.add('show'); }
+    const qt=document.getElementById('qrUploadText');
+    if(qt) qt.textContent='TAP TO CHANGE QR CODE';
+  }
+  renderProducts();
+  renderContacts();
+}
+
+// ══════════════════════════════════════════════════════════
+// SAVE FUNCTIONS — all push directly to server
+// ══════════════════════════════════════════════════════════
+function handleQrUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    cfg.qrImageData=ev.target.result;
+    const p=document.getElementById('qrPreview'); p.src=ev.target.result; p.classList.add('show');
+    document.getElementById('qrUploadText').textContent='TAP TO CHANGE QR CODE';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveSite(){
+  cfg.siteName=document.getElementById('siteName').value.trim();
+  cfg.bigPackText=document.getElementById('bigPackText').value.trim();
+  cfg.bigPackPrice=document.getElementById('bigPackPrice').value;
+  cfg.walletAmt=document.getElementById('walletAmt').value;
+  const ok=await pushToServer(); toast(ok?'✓ Site saved':'❌ Save failed',ok?'':'err');
+}
+
+async function saveToggles(){
+  cfg.togLive=document.getElementById('togLive').checked;
+  cfg.togWallet=document.getElementById('togWallet').checked;
+  cfg.togBigPack=document.getElementById('togBigPack').checked;
+  cfg.togReviews=document.getElementById('togReviews').checked;
+  const ok=await pushToServer(); toast(ok?'✓ Toggles saved':'❌ Save failed',ok?'':'err');
+}
+
+async function savePayment(){
+  cfg.upiId=document.getElementById('upiId').value.trim();
+  cfg.paytmNum=document.getElementById('paytmNum').value.trim();
+  cfg.phonePeNum=document.getElementById('phonePeNum').value.trim();
+  cfg.gpayNum=document.getElementById('gpayNum').value.trim();
+  cfg.paymentMsg=document.getElementById('paymentMsg').value.trim();
+  const ok=await pushToServer(); toast(ok?'✓ Payment saved':'❌ Save failed',ok?'':'err');
+}
+
+async function saveAnnouncement(){
+  cfg.tickerEnabled=document.getElementById('tickerEnabled').checked;
+  cfg.tickerMsg=document.getElementById('tickerMsg').value.trim();
+  cfg.popupEnabled=document.getElementById('popupEnabled').checked;
+  cfg.popupTitle=document.getElementById('popupTitle').value.trim();
+  cfg.popupMsg=document.getElementById('popupMsg').value.trim();
+  cfg.popupBtn=document.getElementById('popupBtn').value.trim();
+  cfg.popupLink=document.getElementById('popupLink').value.trim();
+  const ok=await pushToServer(); toast(ok?'✓ Announcement saved':'❌ Save failed',ok?'':'err');
+}
+
+// ══════════════════════════════════════════════════════════
+// PRODUCTS
+// ══════════════════════════════════════════════════════════
+function renderProducts(){
+  const list=document.getElementById('productsList'); if(!list) return;
+  list.innerHTML='';
+  (cfg.products||[]).forEach((p,i)=>{
+    const div=document.createElement('div'); div.className='product-item';
+    const hasImg=p.imageData&&p.imageData.length>10;
+    div.innerHTML=`
+      <button class="del-btn" onclick="deleteProduct(${i})">✕ DEL</button>
+      <label>Product Name</label>
+      <input type="text" value="${esc(p.name||'')}" oninput="cfg.products[${i}].name=this.value" placeholder="INDIAN COLLECTION">
+      <label>Tag</label>
+      <input type="text" value="${esc(p.tag||'4K UHD')}" oninput="cfg.products[${i}].tag=this.value">
+      <label>Emoji (shown if no image)</label>
+      <input type="text" value="${esc(p.emoji||'🔥')}" oninput="cfg.products[${i}].emoji=this.value" style="width:80px">
+      <label>Number of Videos</label>
+      <input type="text" value="${esc(p.videoCount||'5000+')}" oninput="cfg.products[${i}].videoCount=this.value">
+      <div class="grid2">
+        <div><label>Half Pack (₹)</label><input type="number" value="${p.halfPrice||99}" oninput="cfg.products[${i}].halfPrice=+this.value"></div>
+        <div><label>Full Access (₹)</label><input type="number" value="${p.fullPrice||199}" oninput="cfg.products[${i}].fullPrice=+this.value"></div>
+      </div>
+      <label>Product Image</label>
+      <div class="img-upload-area">
+        <input type="file" accept="image/*" onchange="handleProductImg(event,${i})">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-text">${hasImg?'TAP TO CHANGE IMAGE':'TAP TO UPLOAD IMAGE'}</div>
+      </div>
+      <img id="prodImg_${i}" class="img-preview ${hasImg?'show':''}" src="${hasImg?p.imageData:''}" alt="">`;
+    list.appendChild(div);
+  });
+}
+
+function handleProductImg(e,i){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    cfg.products[i].imageData=ev.target.result;
+    const img=document.getElementById('prodImg_'+i);
+    if(img){ img.src=ev.target.result; img.classList.add('show'); }
+    const txt=e.target.parentElement.querySelector('.upload-text');
+    if(txt) txt.textContent='TAP TO CHANGE IMAGE';
+  };
+  reader.readAsDataURL(file);
+}
+
+function addProduct(){ cfg.products.push({name:'NEW COLLECTION',videoCount:'1000+',halfPrice:99,fullPrice:199,tag:'4K UHD',emoji:'🔥',imageData:''}); renderProducts(); }
+function deleteProduct(i){ if(!confirm('Delete product?')) return; cfg.products.splice(i,1); renderProducts(); }
+async function saveProducts(){ const ok=await pushToServer(); updateStats(); toast(ok?'✓ Products saved':'❌ Save failed',ok?'':'err'); }
+
+// ══════════════════════════════════════════════════════════
+// CONTACTS
+// ══════════════════════════════════════════════════════════
+function renderContacts(){
+  const list=document.getElementById('contactsList'); if(!list) return;
+  list.innerHTML='';
+  (cfg.contacts||[]).forEach((c,i)=>{
+    const div=document.createElement('div'); div.className='contact-row';
+    div.innerHTML=`
+      <div class="contact-row-head"><span class="contact-type-badge">BUTTON ${i+1}</span><button class="del-btn" style="position:static" onclick="deleteContact(${i})">✕</button></div>
+      <label>Label</label><input type="text" value="${esc(c.label||'')}" oninput="cfg.contacts[${i}].label=this.value" placeholder="Message on Telegram">
+      <label>Icon</label><input type="text" value="${esc(c.icon||'✈️')}" oninput="cfg.contacts[${i}].icon=this.value" style="width:80px">
+      <label>URL</label><input type="text" value="${esc(c.url||'')}" oninput="cfg.contacts[${i}].url=this.value" placeholder="https://t.me/yourusername">
+      <label>Style</label>
+      <select onchange="cfg.contacts[${i}].style=this.value">
+        <option value="tg"       ${c.style==='tg'?'selected':''}>Telegram Blue</option>
+        <option value="email"    ${c.style==='email'?'selected':''}>Red / Orange</option>
+        <option value="whatsapp" ${c.style==='whatsapp'?'selected':''}>WhatsApp Green</option>
+        <option value="yellow"   ${c.style==='yellow'?'selected':''}>Golden Yellow</option>
+      </select>`;
+    list.appendChild(div);
+  });
+}
+
+function addContact(){ cfg.contacts.push({label:'New Contact',icon:'💬',url:'https://t.me/',style:'tg'}); renderContacts(); }
+function deleteContact(i){ cfg.contacts.splice(i,1); renderContacts(); }
+async function saveContacts(){ const ok=await pushToServer(); toast(ok?'✓ Contacts saved':'❌ Save failed',ok?'':'err'); }
+
+// ══════════════════════════════════════════════════════════
+// REQUESTS
+// ══════════════════════════════════════════════════════════
+let reqFilter='all';
+
+function filterReqs(f){
+  reqFilter=f;
+  ['All','Pending','Approved','Rejected'].forEach(k=>{
+    const b=document.getElementById('f'+k); if(b) b.classList.toggle('active-filter',k.toLowerCase()===f);
+  });
+  renderRequests();
+}
+
+function renderRequests(){
+  const all=allRequests;
+  const reqs=reqFilter==='all'?all:all.filter(r=>(r.status||'pending')===reqFilter);
+  const el=document.getElementById('requestsList'); if(!el) return;
+  if(!reqs.length){ el.innerHTML='<p style="color:#556;font-size:13px">No requests found.</p>'; return; }
+  el.innerHTML=reqs.slice().reverse().map(r=>{
+    const origIdx=all.findIndex(x=>x.id===r.id);
+    const st=r.status||'pending';
+    const sc=st==='approved'?'status-approved':st==='rejected'?'status-rejected':'status-pending';
+    return `<div class="request-card">
+      <div class="req-header">
+        <span class="req-id">${esc(r.id||'REQ-'+origIdx)}</span>
+        <span class="req-status ${sc}">${st.toUpperCase()}</span>
+      </div>
+      <div class="req-detail">
+        Product: <strong style="color:#fff">${esc(r.order?.productName||'—')}</strong><br>
+        Amount: <strong style="color:#00ff88">₹${esc(String(r.order?.price||'—'))}</strong><br>
+        Access: ${esc(r.order?.accessType||'—')}<br>
+        Time: ${new Date(r.timestamp).toLocaleString()}
+      </div>
+      ${st==='approved'&&r.groupLink?`<div class="group-link-sent">✓ LINK SENT → <a href="${esc(r.groupLink)}" target="_blank" rel="noopener" style="color:#00ff88;word-break:break-all">${esc(r.groupLink)}</a></div>`:''}
+      ${st==='pending'?`<div class="req-actions"><button class="approve-btn" onclick="openGlModal(${origIdx})">✓ APPROVE &amp; SEND LINK</button><button class="reject-btn" onclick="rejectReq(${origIdx})">✕ REJECT</button></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+let pendingApproveIdx=null;
+
+function openGlModal(idx){
+  const r=allRequests[idx]; if(!r){ toast('Request not found','err'); return; }
+  pendingApproveIdx=idx;
+  document.getElementById('glOrderInfo').innerHTML=
+    `Product: <strong style="color:#fff">${esc(r.order?.productName||'—')}</strong><br>
+     Amount: <strong style="color:#00ff88">₹${esc(String(r.order?.price||'—'))}</strong><br>
+     Access: <strong style="color:#00d2ff">${esc(r.order?.accessType||'—')}</strong><br>
+     ID: <span style="color:#ffd700;font-family:monospace">${esc(r.id||String(idx))}</span>`;
+  document.getElementById('glLinkInput').value='';
+  document.getElementById('glLinkInput').style.borderColor='#1a2540';
+  document.getElementById('glModal').classList.add('open');
+  setTimeout(()=>document.getElementById('glLinkInput').focus(),400);
+}
+
+function closeGlModal(){ document.getElementById('glModal').classList.remove('open'); pendingApproveIdx=null; }
+
+async function confirmApprove(){
+  const link=document.getElementById('glLinkInput').value.trim();
+  if(!link){
+    const inp=document.getElementById('glLinkInput');
+    inp.style.borderColor='#ff1e50'; inp.placeholder='⚠ Enter a group link first!';
+    setTimeout(()=>{ inp.style.borderColor='#1a2540'; inp.placeholder='https://t.me/+xxxxxxxx'; },2500);
+    return;
+  }
+  if(pendingApproveIdx===null||!allRequests[pendingApproveIdx]){ toast('Request not found','err'); closeGlModal(); return; }
+  allRequests[pendingApproveIdx].status='approved';
+  allRequests[pendingApproveIdx].groupLink=link;
+  allRequests[pendingApproveIdx].approvedAt=new Date().toISOString();
+
+  const r=allRequests[pendingApproveIdx];
+  if(!allMembers.some(m=>m.reqId===r.id)){
+    allMembers.push({reqId:r.id,product:r.order?.productName||'—',accessType:r.order?.accessType||'—',price:r.order?.price||0,groupLink:link,approvedAt:new Date().toISOString()});
+  }
+  closeGlModal();
+  const ok=await pushToServer();
+  renderRequests(); updateStats(); renderMembers();
+  toast(ok?'✓ Approved & pushed to server':'✓ Approved (push failed — retry)',ok?'':'err');
+}
+
+async function rejectReq(i){
+  if(!confirm('Reject this request?')) return;
+  if(!allRequests[i]){ toast('Request not found','err'); return; }
+  allRequests[i].status='rejected';
+  const ok=await pushToServer();
+  renderRequests(); updateStats();
+  toast(ok?'✗ Rejected':'✗ Rejected (push failed)',ok?'':'err');
+}
+
+async function clearRequests(){
+  if(!confirm('Clear ALL payment requests from server?')) return;
+  allRequests=[];
+  const ok=await pushToServer();
+  renderRequests(); updateStats();
+  toast(ok?'✓ Requests cleared':'❌ Clear failed',ok?'':'err');
+}
+
+// ══════════════════════════════════════════════════════════
+// MEMBERS
+// ══════════════════════════════════════════════════════════
+function renderMembers(){
+  const el=document.getElementById('membersList'); if(!el) return;
+  if(!allMembers.length){ el.innerHTML='<p style="color:#556;font-size:13px">No members yet.</p>'; return; }
+  el.innerHTML=allMembers.slice().reverse().map(m=>`
+    <div class="member-card">
+      <div class="member-badge-pill">✓ ACTIVE MEMBER</div>
+      <div class="member-name">${esc(m.product||'—')}</div>
+      <div class="member-detail">
+        Access: <strong style="color:#00d2ff">${esc(m.accessType||'—')}</strong><br>
+        Paid: <strong style="color:#00ff88">₹${esc(String(m.price||0))}</strong><br>
+        Link: <a href="${esc(m.groupLink)}" target="_blank" rel="noopener" style="color:#ffd700;word-break:break-all">${esc(m.groupLink)}</a><br>
+        Approved: ${new Date(m.approvedAt).toLocaleString()}
+      </div>
+    </div>`).join('');
+}
+
+async function clearMembers(){
+  if(!confirm('Clear ALL member records from server?')) return;
+  allMembers=[];
+  const ok=await pushToServer();
+  renderMembers(); updateStats();
+  toast(ok?'✓ Members cleared':'❌ Clear failed',ok?'':'err');
+}
+
+// ══════════════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════════════
+function updateStats(){
+  const s=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+  s('statReq',allRequests.length);
+  s('statPending',allRequests.filter(r=>!r.status||r.status==='pending').length);
+  s('statApproved',allRequests.filter(r=>r.status==='approved').length);
+  s('statProducts',(cfg.products||[]).length);
+  s('statMembers',allMembers.length);
+  const rev=allRequests.filter(r=>r.status==='approved').reduce((a,r)=>a+(r.order?.price||0),0);
+  s('statRevenue','₹'+rev);
+}
+
+// ══════════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════════
+function changePw(){
+  const cur=document.getElementById('curPw').value;
+  const np=document.getElementById('newPw').value;
+  const cp=document.getElementById('confPw').value;
+  if(cur!==getPass()){ toast('Wrong current password','err'); return; }
+  if(np.length<6){ toast('Password too short (min 6)','err'); return; }
+  if(np!==cp){ toast('Passwords do not match','err'); return; }
+  localStorage.setItem('adminPass',np);
+  ['curPw','newPw','confPw'].forEach(id=>document.getElementById(id).value='');
+  toast('✓ Password changed');
+}
+
+function nukeLocal(){
+  if(!confirm('Clear server config from this browser?\n\nServer data is NOT deleted.')) return;
+  localStorage.removeItem('serverCfg');
+  localStorage.removeItem('adminPass');
+  sessionStorage.clear();
+  location.reload();
+}
+
+// ══════════════════════════════════════════════════════════
+// UTIL
+// ══════════════════════════════════════════════════════════
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg,cls=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(cls?' '+cls:'');
+  setTimeout(()=>t.className='toast',2800);
+}
+
+document.getElementById('glModal').addEventListener('click',function(e){ if(e.target===this) closeGlModal(); });
+</script>
+</body>
+</html>
